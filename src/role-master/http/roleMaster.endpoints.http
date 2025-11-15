@@ -1,0 +1,45 @@
+### List roles
+GET http://localhost:3000/roleMaster?page=1&pageSize=20&search=admin&status=ACTIVE
+
+### Add a role
+POST http://localhost:3000/roleMaster/add
+Content-Type: application/json
+
+{
+  "roleCode": "ADMIN",
+  "roleName": "Administrator",
+  "status": "ACTIVE",
+  "permissions": {
+    "basicMaster": { "scopes": ["VIEW", "EDIT"] },
+    "customerManagement": { "scopes": ["VIEW", "CREATE", "EDIT"] }
+  }
+}
+
+### Get role by id
+GET http://localhost:3000/roleMaster/ROL-001
+
+### Edit role
+PUT http://localhost:3000/roleMaster/edit/ROL-001
+Content-Type: application/json
+
+{
+  "roleName": "Admin",
+  "status": "ACTIVE",
+  "ifMatchVersion": 1
+}
+
+### Get all permissions for a role
+GET http://localhost:3000/roleMaster/ROL-001/permissions
+
+### Get permission for module customerManagement
+GET http://localhost:3000/roleMaster/ROL-001/permissions/customerManagement
+
+### Upsert permission for module customerManagement
+PUT http://localhost:3000/roleMaster/ROL-001/permissions/customerManagement
+Content-Type: application/json
+
+{
+  "scopes": ["VIEW", "CREATE", "EDIT", "EXPORT"],
+  "ifMatchVersion": 1
+}
+

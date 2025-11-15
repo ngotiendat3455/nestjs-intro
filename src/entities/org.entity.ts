@@ -1,0 +1,57 @@
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+  VersionColumn,
+} from 'typeorm';
+
+export enum OrgStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+}
+
+@Entity('orgs')
+export class Org {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Index({ unique: true })
+  @Column({ type: 'varchar', length: 64 })
+  orgCode: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  orgName: string;
+
+  @ManyToOne(() => Org, (o) => o.children, { nullable: true, onDelete: 'SET NULL' })
+  parent?: Org | null;
+
+  @OneToMany(() => Org, (o) => o.parent)
+  children?: Org[];
+
+  @Column({ type: 'enum', enum: OrgStatus, default: OrgStatus.ACTIVE })
+  status: OrgStatus;
+
+  @Column({ type: 'date' })
+  applyStartDate: string | Date;
+
+  @Column({ type: 'date', nullable: true })
+  applyEndDate?: string | Date | null;
+
+  @Column({ type: 'text', nullable: true })
+  description?: string | null;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updatedAt: Date;
+
+  @VersionColumn()
+  version: number;
+}
+

@@ -1,0 +1,40 @@
+### List StaffMaster
+GET http://localhost:3000/staffMaster?page=1&pageSize=20&status=ACTIVE&search=nguyen&orgId=ORG-001&effectiveAt=2025-01-01
+
+### Add new Staff (new id)
+POST http://localhost:3000/staffMaster/add
+Content-Type: application/json
+
+{
+  "staffCode": "E2002",
+  "fullName": "Tran Thi B",
+  "applyStartDate": "2025-01-01",
+  "orgId": "ORG-002",
+  "position": "HR",
+  "status": "ACTIVE",
+  "employmentStatus": "ACTIVE",
+  "workType": "FULL_TIME"
+}
+
+### Add new version for existing id (replace STF-001 accordingly)
+POST http://localhost:3000/staffMaster/add
+Content-Type: application/json
+
+{
+  "id": "STF-001",
+  "staffCode": "E1001",
+  "fullName": "Nguyen Van A",
+  "applyStartDate": "2026-01-01",
+  "status": "ACTIVE"
+}
+
+### Edit a specific version
+PUT http://localhost:3000/staffMaster/edit/STF-001/2025-01-01
+Content-Type: application/json
+
+{
+  "position": "HR Senior",
+  "email": "a@example.com",
+  "ifMatchVersion": 1
+}
+

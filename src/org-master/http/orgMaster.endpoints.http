@@ -1,0 +1,40 @@
+### List OrgMaster
+GET http://localhost:3000/orgMaster?page=1&pageSize=20&status=ACTIVE&search=HR
+
+### List effective at date
+GET http://localhost:3000/orgMaster?effectiveAt=2025-01-01
+
+### Add new OrgMaster (new id)
+POST http://localhost:3000/orgMaster/add
+Content-Type: application/json
+
+{
+  "orgCode": "HR",
+  "orgName": "Human Resources",
+  "applyStartDate": "2025-01-01",
+  "status": "ACTIVE",
+  "description": "Head office HR"
+}
+
+### Add new version for existing id (replace ORG-001 accordingly)
+POST http://localhost:3000/orgMaster/add
+Content-Type: application/json
+
+{
+  "id": "ORG-001",
+  "orgCode": "HR",
+  "orgName": "Human Resources",
+  "applyStartDate": "2026-01-01",
+  "status": "ACTIVE"
+}
+
+### Edit a specific version
+PUT http://localhost:3000/orgMaster/edit/ORG-001/2025-01-01
+Content-Type: application/json
+
+{
+  "orgName": "HR Dept",
+  "description": "Renamed",
+  "ifMatchVersion": 1
+}
+
