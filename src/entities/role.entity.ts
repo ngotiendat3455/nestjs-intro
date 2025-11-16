@@ -5,6 +5,19 @@ export enum RoleStatus {
   INACTIVE = 'INACTIVE',
 }
 
+export enum RoleType {
+  MASTER = 'MASTER',
+  CUSTOMER = 'CUSTOMER',
+  RESERVATION = 'RESERVATION',
+  COMMON = 'COMMON',
+  REGISTER = 'REGISTER',
+  CONTRACT = 'CONTRACT',
+  REVENUE = 'REVENUE',
+  INVENTORY = 'INVENTORY',
+  MAGAZINE = 'MAGAZINE',
+  CASHIER = 'CASHIER',
+}
+
 @Entity('roles')
 export class Role {
   @PrimaryGeneratedColumn('uuid')
@@ -19,6 +32,13 @@ export class Role {
 
   @Column({ type: 'enum', enum: RoleStatus, default: RoleStatus.ACTIVE })
   status: RoleStatus;
+
+  // Lower number means stronger authority (e.g., 0=SystemAdmin, 3=Manager, 5=Staff)
+  @Column({ type: 'int', default: 5 })
+  authorityLevel: number;
+
+  @Column({ type: 'enum', enum: RoleType, default: RoleType.MASTER })
+  roleType: RoleType;
 
   @Column({ type: 'text', nullable: true })
   description?: string | null;
@@ -36,4 +56,3 @@ export class Role {
   @VersionColumn()
   version: number;
 }
-
