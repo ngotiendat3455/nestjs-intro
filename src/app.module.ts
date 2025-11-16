@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { Org, Role, Staff, RoleDetail } from './entities';
+import { Org, Role, Staff, RoleDetail, Customer, CustomerContact, CustomerAddress, CustomerContract } from './entities';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { OrgMasterModule } from './org-master/org-master.module';
@@ -24,7 +24,7 @@ import { UsersModule } from './users/users.module';
         password: '123456',
         database: 'nestjs-blog',
         synchronize: true,
-        entities: [Org, Role, Staff, RoleDetail],
+        entities: [Org, Role, Staff, RoleDetail, Customer, CustomerContact, CustomerAddress, CustomerContract],
       }),
     })
   ],

@@ -1,0 +1,89 @@
+### List customers
+GET http://localhost:3000/customer?page=1&pageSize=20&search=acme&status=ACTIVE
+
+### Get one customer (with nested)
+GET http://localhost:3000/customer/CUS-001
+
+### Add a customer
+POST http://localhost:3000/customer/add
+Content-Type: application/json
+
+{
+  "customerCode": "CUS-001",
+  "customerName": "Acme Inc",
+  "email": "info@acme.co",
+  "phone": "+819012345678",
+  "industry": "RETAIL",
+  "paymentTermDays": 30
+}
+
+### Edit a customer
+PUT http://localhost:3000/customer/edit/CUS-001
+Content-Type: application/json
+
+{
+  "customerName": "Acme KK",
+  "ifMatchVersion": 1
+}
+
+### Contacts
+GET http://localhost:3000/customer/CUS-001/contacts
+
+POST http://localhost:3000/customer/CUS-001/contacts/add
+Content-Type: application/json
+
+{
+  "name": "Tanaka Taro",
+  "email": "tanaka@acme.co",
+  "isPrimary": true
+}
+
+PUT http://localhost:3000/customer/CUS-001/contacts/edit/CTC-001
+Content-Type: application/json
+
+{
+  "phone": "+81312345678",
+  "ifMatchVersion": 1
+}
+
+### Addresses
+GET http://localhost:3000/customer/CUS-001/addresses
+
+POST http://localhost:3000/customer/CUS-001/addresses/add
+Content-Type: application/json
+
+{
+  "type": "BILLING",
+  "postalCode": "100-0001",
+  "city": "Chiyoda",
+  "street": "1-1-1",
+  "isDefault": true
+}
+
+PUT http://localhost:3000/customer/CUS-001/addresses/edit/ADDR-001
+Content-Type: application/json
+
+{
+  "isDefault": true,
+  "ifMatchVersion": 1
+}
+
+### Contracts
+GET http://localhost:3000/customer/CUS-001/contracts?status=ACTIVE
+
+POST http://localhost:3000/customer/CUS-001/contracts/add
+Content-Type: application/json
+
+{
+  "startDate": "2025-01-01",
+  "status": "ACTIVE"
+}
+
+PUT http://localhost:3000/customer/CUS-001/contracts/edit/CTR-001
+Content-Type: application/json
+
+{
+  "endDate": "2026-12-31",
+  "ifMatchVersion": 1
+}
+

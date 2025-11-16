@@ -2,3 +2,7 @@ export * from './org.entity';
 export * from './role.entity';
 export * from './staff.entity';
 export * from './role-detail.entity';
+export * from './customer.entity';
+export * from './customer-contact.entity';
+export * from './customer-address.entity';
+export * from './customer-contract.entity';

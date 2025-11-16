@@ -1,73 +1,13 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Customer, CustomerAddress, CustomerContact, CustomerContract, CustomerStatusEnum } from '../entities';
+import { AddressTypeEnum } from '../entities/customer-address.entity';
+import { ContractStatusEnum } from '../entities/customer-contract.entity';
 
 export type CustomerStatus = 'ACTIVE' | 'INACTIVE';
 export type AddressType = 'BILLING' | 'SHIPPING' | 'OFFICE';
 export type ContractStatus = 'ACTIVE' | 'INACTIVE' | 'TERMINATED';
-
-export interface Customer {
-  id: string;
-  customerCode: string; // unique, immutable
-  customerName: string;
-  status: CustomerStatus;
-  industry?: string | null;
-  taxCode?: string | null;
-  website?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  tags?: string[];
-  note?: string | null;
-  paymentTermDays?: number | null;
-  creditLimit?: number | null;
-  defaultBillingAddressId?: string | null;
-  defaultShippingAddressId?: string | null;
-  createdAt: string;
-  updatedAt: string;
-  version: number;
-}
-
-export interface Contact {
-  contactId: string;
-  customerId: string;
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  position?: string | null;
-  department?: string | null;
-  isPrimary: boolean;
-  createdAt: string;
-  updatedAt: string;
-  version: number;
-}
-
-export interface Address {
-  addressId: string;
-  customerId: string;
-  type: AddressType;
-  postalCode?: string | null;
-  prefecture?: string | null;
-  city?: string | null;
-  street?: string | null;
-  building?: string | null;
-  country?: string | null;
-  isDefault: boolean;
-  createdAt: string;
-  updatedAt: string;
-  version: number;
-}
-
-export interface Contract {
-  contractId: string;
-  customerId: string;
-  contractCode?: string | null;
-  startDate: string; // YYYY-MM-DD
-  endDate?: string | null; // YYYY-MM-DD
-  status: ContractStatus;
-  autoRenew?: boolean | null;
-  note?: string | null;
-  createdAt: string;
-  updatedAt: string;
-  version: number;
-}
 
 interface ListQuery {
   page?: number;
@@ -83,89 +23,72 @@ interface ListQuery {
 
 @Injectable()
 export class CustomerService {
-  private customers: Customer[] = [];
-  private contacts: Contact[] = [];
-  private addresses: Address[] = [];
-  private contracts: Contract[] = [];
-
-  private custCounter = 1;
-  private contactCounter = 1;
-  private addressCounter = 1;
-  private contractCounter = 1;
+  constructor(
+    @InjectRepository(Customer) private readonly customerRepo: Repository<Customer>,
+    @InjectRepository(CustomerContact) private readonly contactRepo: Repository<CustomerContact>,
+    @InjectRepository(CustomerAddress) private readonly addressRepo: Repository<CustomerAddress>,
+    @InjectRepository(CustomerContract) private readonly contractRepo: Repository<CustomerContract>,
+  ) {}
 
   // Customers
-  list(query: ListQuery) {
+  async list(query: ListQuery) {
     const page = query.page && query.page > 0 ? query.page : 1;
     const pageSize = query.pageSize && query.pageSize > 0 ? Math.min(query.pageSize, 100) : 20;
-
-    let data = [...this.customers];
-
+    const qb = this.customerRepo.createQueryBuilder('c');
     if (query.search) {
-      const s = query.search.toLowerCase();
-      data = data.filter((x) =>
-        x.customerCode.toLowerCase().includes(s) ||
-        x.customerName.toLowerCase().includes(s) ||
-        (x.email ?? '').toLowerCase().includes(s) ||
-        (x.phone ?? '').toLowerCase().includes(s),
+      qb.andWhere(
+        "(c.customerCode ILIKE :s OR c.customerName ILIKE :s OR COALESCE(c.email,'') ILIKE :s OR COALESCE(c.phone,'') ILIKE :s)",
+        { s: `%${query.search}%` },
       );
     }
-    if (query.status) data = data.filter((x) => x.status === query.status);
-    if (query.industry) data = data.filter((x) => (x.industry ?? '') === query.industry);
+    if (query.status) qb.andWhere('c.status = :status', { status: query.status });
+    if (query.industry) qb.andWhere('c.industry = :industry', { industry: query.industry });
     if (query.tags) {
+      // require that all tags exist in tags array
       const tags = query.tags.split(',').map((t) => t.trim()).filter(Boolean);
       if (tags.length > 0) {
-        data = data.filter((x) => tags.every((t) => (x.tags ?? []).includes(t)));
+        qb.andWhere("c.tags @> :tags::jsonb", { tags: JSON.stringify(tags) });
       }
     }
     if (query.contractActiveAt) {
-      const d = query.contractActiveAt;
-      data = data.filter((c) =>
-        this.contracts.some(
-          (ct) => ct.customerId === c.id && this.isEffectiveAt(ct.startDate, ct.endDate ?? null, d),
-        ),
+      qb.andWhere(
+        `EXISTS (SELECT 1 FROM customer_contracts ct WHERE ct."customerId" = c.id AND ct."startDate" <= :d AND (:d < ct."endDate" OR ct."endDate" IS NULL))`,
+        { d: query.contractActiveAt },
       );
     }
-
-    if (query.sortBy) {
-      const dir = query.sortOrder === 'desc' ? -1 : 1;
-      const key = query.sortBy;
-      data.sort((a, b) => {
-        const va = (a as any)[key] ?? '';
-        const vb = (b as any)[key] ?? '';
-        if (va === vb) return 0;
-        return va > vb ? dir : -dir;
-      });
-    }
-
-    const total = data.length;
-    const start = (page - 1) * pageSize;
-    const pageData = data.slice(start, start + pageSize);
-    return { data: pageData, page, pageSize, total, hasMore: start + pageSize < total };
-  }
-
-  getOne(id: string) {
-    const c = this.customers.find((x) => x.id === id);
-    if (!c) throw new NotFoundException('Customer not found');
-    return {
-      ...c,
-      contacts: this.contacts.filter((y) => y.customerId === id),
-      addresses: this.addresses.filter((y) => y.customerId === id),
-      contracts: this.contracts.filter((y) => y.customerId === id),
+    const sortMap: Record<string, string> = {
+      customerCode: 'c.customerCode',
+      customerName: 'c.customerName',
+      updatedAt: 'c.updatedAt',
+      contractStartDate: 'c.updatedAt',
     };
+    const sortFld = query.sortBy ? sortMap[query.sortBy] : 'c.updatedAt';
+    const sortOrd = (query.sortOrder || 'desc').toUpperCase() as 'ASC' | 'DESC';
+    qb.orderBy(sortFld, sortOrd).skip((page - 1) * pageSize).take(pageSize);
+    const [rows, total] = await qb.getManyAndCount();
+    return { data: rows, page, pageSize, total, hasMore: (page - 1) * pageSize + rows.length < total };
   }
 
-  add(body: any) {
+  async getOne(id: string) {
+    const c = await this.customerRepo.findOne({ where: { id } });
+    if (!c) throw new NotFoundException('Customer not found');
+    const [contacts, addresses, contracts] = await Promise.all([
+      this.contactRepo.find({ where: { customer: { id } as any } }),
+      this.addressRepo.find({ where: { customer: { id } as any } }),
+      this.contractRepo.find({ where: { customer: { id } as any } }),
+    ]);
+    return { ...c, contacts, addresses, contracts } as any;
+  }
+
+  async add(body: any) {
     const customerCode = this.reqString(body.customerCode, 'customerCode');
     const customerName = this.reqString(body.customerName, 'customerName');
-    const status: CustomerStatus = body.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    const status: CustomerStatusEnum = body.status === 'INACTIVE' ? CustomerStatusEnum.INACTIVE : CustomerStatusEnum.ACTIVE;
 
-    if (this.customers.find((x) => x.customerCode === customerCode)) {
-      throw new ConflictException('customerCode already exists');
-    }
+    const dup = await this.customerRepo.findOne({ where: { customerCode } });
+    if (dup) throw new ConflictException('customerCode already exists');
 
-    const now = new Date().toISOString();
-    const record: Customer = {
-      id: this.genCustomerId(),
+    const entity = this.customerRepo.create({
       customerCode,
       customerName,
       status,
@@ -174,31 +97,25 @@ export class CustomerService {
       website: body.website ?? null,
       email: body.email ? this.optEmail(body.email) : null,
       phone: body.phone ? this.optPhone(body.phone) : null,
-      tags: Array.isArray(body.tags) ? body.tags.map(String) : undefined,
+      tags: Array.isArray(body.tags) ? body.tags.map(String) : null,
       note: body.note ?? null,
       paymentTermDays: this.optNumber(body.paymentTermDays),
-      creditLimit: this.optNumber(body.creditLimit),
+      creditLimit: body.creditLimit != null ? String(this.optNumber(body.creditLimit)) : null,
       defaultBillingAddressId: null,
       defaultShippingAddressId: null,
-      createdAt: now,
-      updatedAt: now,
-      version: 1,
-    };
-    this.customers.push(record);
-    return record;
+    });
+    return await this.customerRepo.save(entity);
   }
 
-  edit(id: string, body: any) {
-    const c = this.customers.find((x) => x.id === id);
+  async edit(id: string, body: any) {
+    const c = await this.customerRepo.findOne({ where: { id } });
     if (!c) throw new NotFoundException('Customer not found');
 
     const ifMatchVersion: number | undefined = body.ifMatchVersion;
-    if (typeof ifMatchVersion === 'number' && ifMatchVersion !== c.version) {
-      throw new ConflictException('Version mismatch');
-    }
+    if (typeof ifMatchVersion === 'number' && ifMatchVersion !== c.version) throw new ConflictException('Version mismatch');
 
     if (typeof body.customerName === 'string' && body.customerName.trim().length > 0) c.customerName = body.customerName.trim();
-    if (body.status === 'ACTIVE' || body.status === 'INACTIVE') c.status = body.status;
+    if (body.status === 'ACTIVE' || body.status === 'INACTIVE') (c as any).status = body.status;
     if (body.industry !== undefined) c.industry = body.industry ?? null;
     if (body.taxCode !== undefined) c.taxCode = body.taxCode ?? null;
     if (body.website !== undefined) c.website = body.website ?? null;
@@ -207,49 +124,39 @@ export class CustomerService {
     if (body.tags !== undefined) c.tags = Array.isArray(body.tags) ? body.tags.map(String) : [];
     if (body.note !== undefined) c.note = body.note ?? null;
     if (body.paymentTermDays !== undefined) c.paymentTermDays = this.optNumber(body.paymentTermDays);
-    if (body.creditLimit !== undefined) c.creditLimit = this.optNumber(body.creditLimit);
+    if (body.creditLimit !== undefined) c.creditLimit = body.creditLimit != null ? String(this.optNumber(body.creditLimit)) : null;
 
-    c.updatedAt = new Date().toISOString();
-    c.version += 1;
-    return c;
+    return await this.customerRepo.save(c);
   }
 
   // Contacts
-  listContacts(customerId: string) {
-    this.ensureCustomer(customerId);
-    return this.contacts.filter((x) => x.customerId === customerId);
+  async listContacts(customerId: string) {
+    await this.ensureCustomer(customerId);
+    return this.contactRepo.find({ where: { customer: { id: customerId } as any } });
   }
 
-  addContact(customerId: string, body: any) {
-    const customer = this.ensureCustomer(customerId);
+  async addContact(customerId: string, body: any) {
+    await this.ensureCustomer(customerId);
     const name = this.reqString(body.name, 'name');
     const email = body.email ? this.optEmail(body.email) : null;
     const phone = body.phone ? this.optPhone(body.phone) : null;
     const isPrimary = Boolean(body.isPrimary);
-
-    const now = new Date().toISOString();
-    const contact: Contact = {
-      contactId: this.genContactId(),
-      customerId,
+    if (isPrimary) await this.demoteOtherPrimaryContact(customerId);
+    const contact = this.contactRepo.create({
+      customer: { id: customerId } as any,
       name,
       email,
       phone,
       position: body.position ?? null,
       department: body.department ?? null,
       isPrimary,
-      createdAt: now,
-      updatedAt: now,
-      version: 1,
-    };
-    if (isPrimary) this.demoteOtherPrimaryContact(customerId);
-    this.contacts.push(contact);
-    // set default primary email/phone not linked to customer; we just keep in contacts
-    return contact;
+    });
+    return await this.contactRepo.save(contact);
   }
 
-  editContact(customerId: string, contactId: string, body: any) {
-    this.ensureCustomer(customerId);
-    const c = this.contacts.find((x) => x.customerId === customerId && x.contactId === contactId);
+  async editContact(customerId: string, contactId: string, body: any) {
+    await this.ensureCustomer(customerId);
+    const c = await this.contactRepo.findOne({ where: { contactId, customer: { id: customerId } as any } });
     if (!c) throw new NotFoundException('Contact not found');
     const ifMatchVersion: number | undefined = body.ifMatchVersion;
     if (typeof ifMatchVersion === 'number' && ifMatchVersion !== c.version) throw new ConflictException('Version mismatch');
@@ -261,30 +168,26 @@ export class CustomerService {
     if (body.department !== undefined) c.department = body.department ?? null;
     if (body.isPrimary !== undefined) {
       const setPrimary = Boolean(body.isPrimary);
-      if (setPrimary) this.demoteOtherPrimaryContact(customerId, contactId);
+      if (setPrimary) await this.demoteOtherPrimaryContact(customerId, contactId);
       c.isPrimary = setPrimary;
     }
-
-    c.updatedAt = new Date().toISOString();
-    c.version += 1;
-    return c;
+    return await this.contactRepo.save(c);
   }
 
   // Addresses
-  listAddresses(customerId: string) {
-    this.ensureCustomer(customerId);
-    return this.addresses.filter((x) => x.customerId === customerId);
+  async listAddresses(customerId: string) {
+    await this.ensureCustomer(customerId);
+    return this.addressRepo.find({ where: { customer: { id: customerId } as any } });
   }
 
-  addAddress(customerId: string, body: any) {
-    this.ensureCustomer(customerId);
+  async addAddress(customerId: string, body: any) {
+    await this.ensureCustomer(customerId);
     const type = this.reqAddressType(body.type);
     const isDefault = Boolean(body.isDefault);
-    const now = new Date().toISOString();
-    const addr: Address = {
-      addressId: this.genAddressId(),
-      customerId,
-      type,
+    if (isDefault) await this.clearDefaultAddress(customerId, type);
+    const addr = this.addressRepo.create({
+      customer: { id: customerId } as any,
+      type: type as any,
       postalCode: body.postalCode ?? null,
       prefecture: body.prefecture ?? null,
       city: body.city ?? null,
@@ -292,24 +195,20 @@ export class CustomerService {
       building: body.building ?? null,
       country: body.country ?? null,
       isDefault,
-      createdAt: now,
-      updatedAt: now,
-      version: 1,
-    };
-    if (isDefault) this.clearDefaultAddress(customerId, type);
-    this.addresses.push(addr);
-    this.updateCustomerDefaultIds(customerId);
-    return addr;
+    });
+    const saved = await this.addressRepo.save(addr);
+    await this.updateCustomerDefaultIds(customerId);
+    return saved;
   }
 
-  editAddress(customerId: string, addressId: string, body: any) {
-    this.ensureCustomer(customerId);
-    const a = this.addresses.find((x) => x.customerId === customerId && x.addressId === addressId);
+  async editAddress(customerId: string, addressId: string, body: any) {
+    await this.ensureCustomer(customerId);
+    const a = await this.addressRepo.findOne({ where: { addressId, customer: { id: customerId } as any } });
     if (!a) throw new NotFoundException('Address not found');
     const ifMatchVersion: number | undefined = body.ifMatchVersion;
     if (typeof ifMatchVersion === 'number' && ifMatchVersion !== a.version) throw new ConflictException('Version mismatch');
 
-    if (body.type !== undefined) a.type = this.reqAddressType(body.type);
+    if (body.type !== undefined) (a as any).type = this.reqAddressType(body.type) as any;
     if (body.postalCode !== undefined) a.postalCode = body.postalCode ?? null;
     if (body.prefecture !== undefined) a.prefecture = body.prefecture ?? null;
     if (body.city !== undefined) a.city = body.city ?? null;
@@ -318,142 +217,117 @@ export class CustomerService {
     if (body.country !== undefined) a.country = body.country ?? null;
     if (body.isDefault !== undefined) {
       const setDefault = Boolean(body.isDefault);
-      if (setDefault) this.clearDefaultAddress(customerId, a.type, addressId);
+      if (setDefault) await this.clearDefaultAddress(customerId, a.type as any, addressId);
       a.isDefault = setDefault;
     }
-
-    a.updatedAt = new Date().toISOString();
-    a.version += 1;
-    this.updateCustomerDefaultIds(customerId);
-    return a;
+    const saved = await this.addressRepo.save(a);
+    await this.updateCustomerDefaultIds(customerId);
+    return saved;
   }
 
   // Contracts
-  listContracts(customerId: string, status?: ContractStatus, effectiveAt?: string) {
-    this.ensureCustomer(customerId);
-    let data = this.contracts.filter((x) => x.customerId === customerId);
-    if (status) data = data.filter((x) => x.status === status);
-    if (effectiveAt) data = data.filter((x) => this.isEffectiveAt(x.startDate, x.endDate ?? null, effectiveAt));
-    return data;
+  async listContracts(customerId: string, status?: ContractStatus, effectiveAt?: string) {
+    await this.ensureCustomer(customerId);
+    const qb = this.contractRepo.createQueryBuilder('ct').where('ct."customerId" = :id', { id: customerId });
+    if (status) qb.andWhere('ct.status = :st', { st: status });
+    if (effectiveAt) qb.andWhere('ct."startDate" <= :d AND (:d < ct."endDate" OR ct."endDate" IS NULL)', { d: effectiveAt });
+    return qb.getMany();
   }
 
-  addContract(customerId: string, body: any) {
-    this.ensureCustomer(customerId);
+  async addContract(customerId: string, body: any) {
+    await this.ensureCustomer(customerId);
     const startDate = this.reqDate(body.startDate, 'startDate');
     const endDate = body.endDate ? this.reqDate(body.endDate, 'endDate') : null;
     if (endDate && !(startDate < endDate)) throw new BadRequestException('endDate must be greater than startDate');
-    const status: ContractStatus = ['ACTIVE', 'INACTIVE', 'TERMINATED'].includes(body.status)
-      ? body.status
-      : 'ACTIVE';
+    const status: ContractStatusEnum = ['ACTIVE', 'INACTIVE', 'TERMINATED'].includes(body.status)
+      ? (body.status as ContractStatusEnum)
+      : ContractStatusEnum.ACTIVE;
 
     // Overlap protection
-    for (const ct of this.contracts.filter((x) => x.customerId === customerId)) {
-      if (this.rangesOverlap(ct.startDate, ct.endDate ?? null, startDate, endDate)) {
+    const existing = await this.contractRepo.find({ where: { customer: { id: customerId } as any } });
+    for (const ct of existing) {
+      const aStart = this.dateToYMD(ct.startDate);
+      const aEnd = ct.endDate ? this.dateToYMD(ct.endDate) : null;
+      if (this.rangesOverlap(aStart, aEnd, startDate, endDate)) {
         throw new ConflictException('Contract date range overlap');
       }
     }
 
-    const now = new Date().toISOString();
-    const record: Contract = {
-      contractId: this.genContractId(),
-      customerId,
+    const entity = this.contractRepo.create({
+      customer: { id: customerId } as any,
       contractCode: body.contractCode ?? null,
-      startDate,
-      endDate,
+      startDate: startDate as any,
+      endDate: (endDate as any) ?? null,
       status,
-      autoRenew: body.autoRenew ?? null,
+      autoRenew: Boolean(body.autoRenew),
       note: body.note ?? null,
-      createdAt: now,
-      updatedAt: now,
-      version: 1,
-    };
-    this.contracts.push(record);
-    return record;
+    });
+    return await this.contractRepo.save(entity);
   }
 
-  editContract(customerId: string, contractId: string, body: any) {
-    this.ensureCustomer(customerId);
-    const c = this.contracts.find((x) => x.customerId === customerId && x.contractId === contractId);
+  async editContract(customerId: string, contractId: string, body: any) {
+    await this.ensureCustomer(customerId);
+    const c = await this.contractRepo.findOne({ where: { contractId, customer: { id: customerId } as any } });
     if (!c) throw new NotFoundException('Contract not found');
     const ifMatchVersion: number | undefined = body.ifMatchVersion;
     if (typeof ifMatchVersion === 'number' && ifMatchVersion !== c.version) throw new ConflictException('Version mismatch');
 
     if (body.endDate !== undefined) {
       const newEnd = body.endDate ? this.reqDate(body.endDate, 'endDate') : null;
-      if (newEnd && !(c.startDate < newEnd)) throw new BadRequestException('endDate must be greater than startDate');
-      // overlap check against others
-      for (const ct of this.contracts) {
-        if (ct === c) continue;
-        if (ct.customerId !== customerId) continue;
-        if (this.rangesOverlap(ct.startDate, ct.endDate ?? null, c.startDate, newEnd)) {
+      if (newEnd && !(this.dateToYMD(c.startDate) < newEnd)) throw new BadRequestException('endDate must be greater than startDate');
+      const others = await this.contractRepo.find({ where: { customer: { id: customerId } as any } });
+      for (const ct of others) {
+        if (ct.contractId === c.contractId) continue;
+        const aStart = this.dateToYMD(ct.startDate);
+        const aEnd = ct.endDate ? this.dateToYMD(ct.endDate) : null;
+        if (this.rangesOverlap(aStart, aEnd, this.dateToYMD(c.startDate), newEnd)) {
           throw new ConflictException('Contract date range overlap');
         }
       }
-      c.endDate = newEnd;
+      c.endDate = (newEnd as any) ?? null;
     }
-    if (['ACTIVE', 'INACTIVE', 'TERMINATED'].includes(body.status)) c.status = body.status;
+    if (['ACTIVE', 'INACTIVE', 'TERMINATED'].includes(body.status)) (c as any).status = body.status;
     if (body.autoRenew !== undefined) c.autoRenew = Boolean(body.autoRenew);
     if (body.note !== undefined) c.note = body.note ?? null;
 
-    c.updatedAt = new Date().toISOString();
-    c.version += 1;
-    return c;
+    return await this.contractRepo.save(c);
   }
 
   // Helpers
-  private genCustomerId() {
-    const id = `CUS-${String(this.custCounter).padStart(3, '0')}`;
-    this.custCounter += 1;
-    return id;
-  }
-  private genContactId() {
-    const id = `CTC-${String(this.contactCounter).padStart(3, '0')}`;
-    this.contactCounter += 1;
-    return id;
-  }
-  private genAddressId() {
-    const id = `ADDR-${String(this.addressCounter).padStart(3, '0')}`;
-    this.addressCounter += 1;
-    return id;
-  }
-  private genContractId() {
-    const id = `CTR-${String(this.contractCounter).padStart(3, '0')}`;
-    this.contractCounter += 1;
-    return id;
-  }
-
-  private ensureCustomer(id: string) {
-    const c = this.customers.find((x) => x.id === id);
+  private async ensureCustomer(id: string) {
+    const c = await this.customerRepo.findOne({ where: { id } });
     if (!c) throw new NotFoundException('Customer not found');
     return c;
   }
 
-  private demoteOtherPrimaryContact(customerId: string, exceptId?: string) {
-    for (const c of this.contacts) {
-      if (c.customerId === customerId && c.contactId !== exceptId && c.isPrimary) {
-        c.isPrimary = false;
-        c.updatedAt = new Date().toISOString();
-        c.version += 1;
-      }
-    }
+  private async demoteOtherPrimaryContact(customerId: string, exceptId?: string) {
+    const q = this.contactRepo
+      .createQueryBuilder()
+      .update(CustomerContact)
+      .set({ isPrimary: false })
+      .where('"customerId" = :id', { id: customerId });
+    if (exceptId) q.andWhere('"contactId" <> :cid', { cid: exceptId });
+    await q.execute();
   }
 
-  private clearDefaultAddress(customerId: string, type: AddressType, exceptId?: string) {
-    for (const a of this.addresses) {
-      if (a.customerId === customerId && a.type === type && a.addressId !== exceptId && a.isDefault) {
-        a.isDefault = false;
-        a.updatedAt = new Date().toISOString();
-        a.version += 1;
-      }
-    }
+  private async clearDefaultAddress(customerId: string, type: AddressType, exceptId?: string) {
+    const q = this.addressRepo
+      .createQueryBuilder()
+      .update(CustomerAddress)
+      .set({ isDefault: false })
+      .where('"customerId" = :id', { id: customerId })
+      .andWhere('type = :t', { t: type });
+    if (exceptId) q.andWhere('"addressId" <> :aid', { aid: exceptId });
+    await q.execute();
   }
 
-  private updateCustomerDefaultIds(customerId: string) {
-    const c = this.ensureCustomer(customerId);
-    const billing = this.addresses.find((a) => a.customerId === customerId && a.type === 'BILLING' && a.isDefault);
-    const shipping = this.addresses.find((a) => a.customerId === customerId && a.type === 'SHIPPING' && a.isDefault);
+  private async updateCustomerDefaultIds(customerId: string) {
+    const c = await this.ensureCustomer(customerId);
+    const billing = await this.addressRepo.findOne({ where: { customer: { id: customerId } as any, type: AddressTypeEnum.BILLING, isDefault: true } });
+    const shipping = await this.addressRepo.findOne({ where: { customer: { id: customerId } as any, type: AddressTypeEnum.SHIPPING, isDefault: true } });
     c.defaultBillingAddressId = billing ? billing.addressId : null;
     c.defaultShippingAddressId = shipping ? shipping.addressId : null;
+    await this.customerRepo.save(c);
   }
 
   private reqString(v: any, field: string) {
@@ -484,6 +358,23 @@ export class CustomerService {
     if (!Number.isFinite(n)) throw new BadRequestException('number field is invalid');
     return n;
   }
+  private dateToYMD(d: any): string {
+    if (!d) return '';
+    if (typeof d === 'string') {
+      return d.includes('/') ? d.replace(/\//g, '-') : d;
+    }
+    const dt = new Date(d);
+    const y = dt.getUTCFullYear();
+    const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(dt.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  private reqAddressType(v: any) {
+    if (typeof v !== 'string') throw new BadRequestException('type must be string');
+    const s = v.trim().toUpperCase();
+    if (s === 'BILLING' || s === 'SHIPPING' || s === 'OFFICE') return s as AddressType;
+    throw new BadRequestException('type must be one of BILLING|SHIPPING|OFFICE');
+  }
   private isEffectiveAt(start: string, end: string | null, d: string) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
     const startOk = start <= d;
@@ -496,4 +387,3 @@ export class CustomerService {
     return aStart < bE && bStart < aE;
   }
 }
-
