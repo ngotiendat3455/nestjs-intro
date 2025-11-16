@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Org, Role, Staff, RoleDetail, Customer, CustomerContact, CustomerAddress, CustomerContract } from './entities';
+import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { OrgMasterModule } from './org-master/org-master.module';
@@ -13,6 +14,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     OrgMasterModule,
     StaffMasterModule,
+    AuthModule,
     CustomerModule,
     RoleMasterModule,
     TypeOrmModule.forRootAsync({
