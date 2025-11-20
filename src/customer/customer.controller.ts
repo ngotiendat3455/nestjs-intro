@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { ContractStatus, CustomerService } from './customer.service';
+import { CustomerService } from './customer.service';
 
 @Controller('customer')
 export class CustomerController {
-  constructor(private readonly service: CustomerService) {}
+  constructor(private readonly service: CustomerService) { }
 
   // Customers
   @Get()
@@ -78,7 +78,7 @@ export class CustomerController {
   @Get(':id/contracts')
   listContracts(
     @Param('id') id: string,
-    @Query('status') status?: ContractStatus,
+    @Query('status') status?: any,
     @Query('effectiveAt') effectiveAt?: string,
   ) {
     return this.service.listContracts(id, status, effectiveAt);

@@ -1,0 +1,12 @@
+### Login
+POST http://localhost:4200/users/login/ACME
+Content-Type: application/json
+
+{
+  "loginCode": "admin",
+  "password": "admin123"
+}
+
+### Get staff detail (optional Authorization header)
+GET http://localhost:4200/v1/staffs/ACME?staffId=STF-001
+Authorization: Bearer REPLACE_WITH_ACCESS_TOKEN

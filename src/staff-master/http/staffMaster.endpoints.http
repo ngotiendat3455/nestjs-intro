@@ -1,23 +1,102 @@
 ### List StaffMaster
-GET http://localhost:3000/staffMaster?page=1&pageSize=20&status=ACTIVE&search=nguyen&orgId=ORG-001&effectiveAt=2025-01-01
+GET http://localhost:4200/staffMaster?page=1&pageSize=20&status=ACTIVE&employmentStatus=ACTIVE&search=nguyen&position=HR&effectiveAt=2025-01-01&sortBy=updatedAt&sortOrder=desc
 
 ### Add new Staff (new id)
-POST http://localhost:3000/staffMaster/add
+POST http://localhost:4200/staffMaster/add
 Content-Type: application/json
 
 {
   "staffCode": "E2002",
   "fullName": "Tran Thi B",
-  "applyStartDate": "2025-01-01",
-  "orgId": "ORG-002",
+
+  "staffName": "Tran Thi B",
+  "staffSei": "Tran",
+  "staffMei": "B",
+  "staffNameKana": null,
+  "staffSeiKana": null,
+  "staffMeiKana": null,
+
+  "orgId": null,
+  "managerId": null,
   "position": "HR",
+  "grade": "S1",
+  "email": "b@example.com",
+  "phone": "+819012345679",
+  "mobileMailAddress": "b-mobile@example.com",
+  "orgCode": "HR",
+  "orgName": "Human Resources",
+  "companyCode": "ACME",
+
   "status": "ACTIVE",
   "employmentStatus": "ACTIVE",
-  "workType": "FULL_TIME"
+  "workType": "FULL_TIME",
+
+  "hireDate": "2025-01-15",
+  "terminateDate": null,
+
+  "applyStartDate": "2025-01-01",
+  "applyEndDate": null,
+  "description": "New hire",
+
+  "loginId": "e2002",
+  "username": "tran.b",
+  "password": "secret123",
+
+  "authorityLevel": 5,
+  "isActive": true,
+  "administratorFlag": false,
+
+  "beforeStaffCode": null,
+  "beforeStaffId": null,
+  "createDate": "2025-01-01",
+  "createUser": "admin",
+  "dispOrgApplyDate": "2025-01-01",
+  "editStaffId": null,
+  "employmentId": null,
+  "enterdDate": null,
+  "executiveCode": null,
+  "executiveId": null,
+  "executiveName": null,
+  "stateType": 0,
+  "updateDate": "2025-01-01",
+  "updateUser": "admin",
+
+  "organizationDataList": [],
+  "employmentDataList": [],
+  "combineStoreSetting": [],
+  "combinedStore": [],
+
+  "masterRoleId": null,
+  "saleRoleId": null,
+  "customerRoleId": null,
+  "reservationRoleId": null,
+  "commonRoleId": null,
+  "registerRoleId": null,
+  "contractRoleId": null,
+  "revenueRoleId": null,
+  "inventoryRoleId": null,
+  "mailMagazineRoleId": null
+}
+
+### Add new Staff (link to existing Org by UUID)
+POST http://localhost:4200/staffMaster/add
+Content-Type: application/json
+
+{
+  "staffCode": "E3003",
+  "fullName": "Pham Van C",
+  "applyStartDate": "2025-02-01",
+  "status": "ACTIVE",
+  "employmentStatus": "ACTIVE",
+  "workType": "FULL_TIME",
+
+  "orgId": "REPLACE_WITH_ORG_UUID",
+  "position": "IT",
+  "email": "c@example.com"
 }
 
 ### Add new version for existing id (replace STF-001 accordingly)
-POST http://localhost:3000/staffMaster/add
+POST http://localhost:4200/staffMaster/add
 Content-Type: application/json
 
 {
@@ -25,16 +104,37 @@ Content-Type: application/json
   "staffCode": "E1001",
   "fullName": "Nguyen Van A",
   "applyStartDate": "2026-01-01",
-  "status": "ACTIVE"
+  "applyEndDate": null,
+  "position": "HR Senior",
+  "grade": "S2",
+  "status": "ACTIVE",
+  "employmentStatus": "ACTIVE",
+  "workType": "FULL_TIME"
 }
 
 ### Edit a specific version
-PUT http://localhost:3000/staffMaster/edit/STF-001/2025-01-01
+PUT http://localhost:4200/staffMaster/edit/STF-001/2025-01-01
 Content-Type: application/json
 
 {
   "position": "HR Senior",
   "email": "a@example.com",
+  "phone": "+81312345678",
+  "loginId": "e1001",
+  "password": "newPass123",
+  "authorityLevel": 6,
+  "isActive": true,
+  "applyEndDate": "2026-01-01",
+  "masterRoleId": null,
+  "mailMagazineRoleId": null,
+  "organizationDataList": [],
   "ifMatchVersion": 1
 }
 
+### Notes
+# - Các trường liên kết (orgId, managerId, *RoleId) là UUID thật trong DB.
+#   Nếu bạn chưa có dữ liệu Org/Role, để null hoặc bỏ qua các field này để tránh lỗi Postgres string_to_uuid.
+# - Trường "id" trong API StaffMaster là staffId (chuỗi ổn định giữa các phiên bản),
+#   khác với khóa chính id (UUID) của bảng staff. Giá trị này sẽ được trả về sau khi tạo mới.
+# - orgId KHÔNG phải "ORG-001" từ module orgMaster. Nó là UUID của bản ghi trong bảng `orgs`.
+#   Nếu bạn chưa có API tạo Org (DB), có thể seed DB hoặc mình có thể thêm nhanh endpoint Org cho bạn.
