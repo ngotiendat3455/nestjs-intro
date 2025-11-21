@@ -1,10 +1,10 @@
-### List OrgMaster
+### List OrgMaster (DB)
 GET http://localhost:4200/orgMaster?page=1&pageSize=20&status=ACTIVE&search=HR
 
 ### List effective at date
 GET http://localhost:4200/orgMaster?effectiveAt=2025-01-01
 
-### Add new OrgMaster (new id)
+### Add new Org (DB)
 POST http://localhost:4200/orgMaster/add
 Content-Type: application/json
 
@@ -13,28 +13,19 @@ Content-Type: application/json
   "orgName": "Human Resources",
   "applyStartDate": "2025-01-01",
   "status": "ACTIVE",
-  "description": "Head office HR"
+  "description": "Head office HR",
+  "parentId": null
 }
 
-### Add new version for existing id (replace ORG-001 accordingly)
-POST http://localhost:4200/orgMaster/add
-Content-Type: application/json
-
-{
-  "id": "ORG-002",
-  "orgCode": "IT",
-  "orgName": "IT DEPARTMENT",
-  "applyStartDate": "2026-01-01",
-  "status": "ACTIVE"
-}
-
-### Edit a specific version
-PUT http://localhost:4200/orgMaster/edit/ORG-001/2025-01-01
+### Edit Org by UUID (applyStartDate kept in path for compatibility)
+# Replace :id with the UUID returned from Add API
+# You can pass the current applyStartDate of the record in the path.
+PUT http://localhost:4200/orgMaster/edit/:id/2025-01-01
 Content-Type: application/json
 
 {
   "orgName": "HR Dept",
   "description": "Renamed",
+  "status": "ACTIVE",
   "ifMatchVersion": 1
 }
-

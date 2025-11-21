@@ -1,0 +1,41 @@
+### List ExecutiveMaster
+GET http://localhost:4200/executiveMaster?page=1&pageSize=20&status=ACTIVE&search=nguyen&orgId=REPLACE_ORG_UUID&effectiveAt=2025-01-01&sortBy=updatedAt&sortOrder=desc
+
+### Add new Executive
+POST http://localhost:4200/executiveMaster/add
+Content-Type: application/json
+
+{
+  "executiveCode": "EX001",
+  "executiveName": "Nguyen Van CEO",
+  "position": "CEO",
+  "orgId": null,
+  "email": "ceo@example.com",
+  "phone": "+81312345678",
+  "status": "ACTIVE",
+  "applyStartDate": "2025-01-01",
+  "applyEndDate": null,
+  "description": "Head of company"
+}
+
+### Edit Executive by UUID
+PUT http://localhost:4200/executiveMaster/edit/REPLACE_EXEC_UUID
+Content-Type: application/json
+
+{
+  "executiveName": "Nguyen Van CEO Jr",
+  "position": "CEO",
+  "email": "ceo@example.com",
+  "phone": "+81312345678",
+  "status": "ACTIVE",
+  "description": "Promoted",
+  "applyEndDate": null,
+  "ifMatchVersion": 1
+}
+
+### Notes
+# - orgId là UUID của bảng orgs (có thể null).
+# - executiveCode là duy nhất toàn hệ thống.
+# - applyEndDate phải lớn hơn applyStartDate nếu có.
+# - ifMatchVersion nên truyền khi PUT để tránh ghi đè xung đột.
+

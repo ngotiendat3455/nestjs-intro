@@ -1,0 +1,102 @@
+### Get effective format (fallback org->global)
+GET http://localhost:4200/customer/settings/number-format?target=CUSTOMER_NO&orgId=REPLACE_ORG_UUID
+
+### Create a new format setting (GLOBAL)
+POST http://localhost:4200/customer/settings/number-format
+Content-Type: application/json
+
+{
+  "target": "CUSTOMER_NO",
+  "scope": "GLOBAL",
+  "enabled": true,
+  "joiner": "-",
+  "fiscalYearStartMonth": 4,
+  "parts": [
+    { "type": "LITERAL", "options": { "value": "CUST" } },
+    { "type": "FISCAL_YEAR", "options": { "style": "YY", "startMonth": 4 } },
+    { "type": "DATE", "options": { "format": "YYMMDD" } },
+    { "type": "SERIAL", "options": { "digits": 4, "resetPolicy": "DAILY", "scope": "GLOBAL", "startFrom": 0, "step": 1 } }
+  ],
+  "description": "Global customer number format"
+}
+
+### Create format for ORG
+POST http://localhost:4200/customer/settings/number-format
+Content-Type: application/json
+
+{
+  "target": "CUSTOMER_NO",
+  "scope": "ORG",
+  "orgId": "REPLACE_ORG_UUID",
+  "enabled": true,
+  "joiner": "",
+  "parts": [
+    { "type": "ORG_CODE" },
+    { "type": "SERIAL", "options": { "digits": 5, "resetPolicy": "FISCAL_YEARLY", "scope": "ORG", "startFrom": 100, "step": 1 } }
+  ]
+}
+
+### Update setting
+PUT http://localhost:4200/customer/settings/number-format/REPLACE_FORMAT_ID
+Content-Type: application/json
+
+{
+  "enabled": true,
+  "joiner": "-",
+  "ifMatchVersion": 1
+}
+
+### Preview a format (by id)
+POST http://localhost:4200/customer/settings/number-format/preview
+Content-Type: application/json
+
+{
+  "id": "REPLACE_FORMAT_ID",
+  "sample": {
+    "date": "2025-01-31",
+    "orgId": "REPLACE_ORG_UUID"
+  }
+}
+
+### Preview with inline config (no DB)
+POST http://localhost:4200/customer/settings/number-format/preview
+Content-Type: application/json
+
+{
+  "config": {
+    "target": "CUSTOMER_NO",
+    "scope": "GLOBAL",
+    "enabled": true,
+    "parts": [
+      { "type": "LITERAL", "options": { "value": "C" } },
+      { "type": "DATE", "options": { "format": "YYYYMMDD" } },
+      { "type": "SERIAL", "options": { "digits": 4, "resetPolicy": "DAILY", "scope": "GLOBAL" } }
+    ]
+  },
+  "sample": { "date": "2025-01-31" }
+}
+
+### Generate a value (increments serial)
+POST http://localhost:4200/customer/settings/number-format/generate
+Content-Type: application/json
+
+{
+  "target": "CUSTOMER_NO",
+  "orgId": null,
+  "date": "2025-01-31"
+}
+
+### Get list-display toggles (fallback org->global)
+GET http://localhost:4200/customer/settings/list-display?orgId=REPLACE_ORG_UUID
+
+### Upsert list-display toggles
+PUT http://localhost:4200/customer/settings/list-display
+Content-Type: application/json
+
+{
+  "scope": "GLOBAL",
+  "showCustomerNo": true,
+  "showManagementNo": false,
+  "ifMatchVersion": 1
+}
+
