@@ -8,3 +8,4 @@ export * from './customer-address.entity';
 export * from './customer-contract.entity';
 export * from './executive.entity';
 export * from './customer-number-format.entity';
+export * from './contract-course.entity';

@@ -1,0 +1,33 @@
+### List CourseMaster
+GET http://localhost:4200/courseMaster?page=1&pageSize=20&status=ACTIVE&search=basic
+
+### Add new Contract Course
+POST http://localhost:4200/courseMaster/add
+Content-Type: application/json
+
+{
+  "courseCode": "COURSE001",
+  "courseName": "Basic Plan",
+  "status": "ACTIVE",
+  "description": "Standard contract course"
+}
+
+### Get Contract Course by contractCourseId
+GET http://localhost:4200/courseMaster/REPLACE_CONTRACT_COURSE_ID
+
+### Edit Contract Course
+PUT http://localhost:4200/courseMaster/edit/REPLACE_CONTRACT_COURSE_ID
+Content-Type: application/json
+
+{
+  "courseName": "Basic Plan Updated",
+  "status": "INACTIVE",
+  "description": "Updated description",
+  "ifMatchVersion": 1
+}
+
+### Notes
+# - courseCode is unique across contract_courses.
+# - status must be one of ACTIVE | INACTIVE.
+# - ifMatchVersion should be the current version to avoid lost updates.
+

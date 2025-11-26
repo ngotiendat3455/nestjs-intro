@@ -1,6 +1,20 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { Org, Role, Staff, RoleDetail, Customer, CustomerContact, CustomerAddress, CustomerContract, Executive, CustomerListDisplaySetting, CustomerNumberFormatSetting, CustomerSerialCounter } from './entities';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import {
+  Org,
+  Role,
+  Staff,
+  RoleDetail,
+  Customer,
+  CustomerContact,
+  CustomerAddress,
+  CustomerContract,
+  Executive,
+  CustomerListDisplaySetting,
+  CustomerNumberFormatSetting,
+  CustomerSerialCounter,
+  ContractCourse,
+} from './entities';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -11,6 +25,7 @@ import { CustomerModule } from './customer/customer.module';
 import { UsersModule } from './users/users.module';
 import { ExecutiveMasterModule } from './executive-master/executive-master.module';
 import { CustomerNumberFormatModule } from './customer-number-format/customer-number-format.module';
+import { CourseMasterModule } from './course-master/course-master.module';
 @Module({
   imports: [
     UsersModule,
@@ -21,6 +36,7 @@ import { CustomerNumberFormatModule } from './customer-number-format/customer-nu
     AuthModule,
     CustomerModule,
     RoleMasterModule,
+    CourseMasterModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         type: 'postgres',
@@ -30,7 +46,21 @@ import { CustomerNumberFormatModule } from './customer-number-format/customer-nu
         password: '123456',
         database: 'nestjs-blog',
         synchronize: true,
-        entities: [Org, Role, Staff, RoleDetail, Customer, CustomerContact, CustomerAddress, CustomerContract, Executive, CustomerNumberFormatSetting, CustomerSerialCounter, CustomerListDisplaySetting],
+        entities: [
+          Org,
+          Role,
+          Staff,
+          RoleDetail,
+          Customer,
+          CustomerContact,
+          CustomerAddress,
+          CustomerContract,
+          Executive,
+          CustomerNumberFormatSetting,
+          CustomerSerialCounter,
+          CustomerListDisplaySetting,
+          ContractCourse,
+        ],
       }),
     })
   ],
