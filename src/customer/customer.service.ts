@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Customer, CustomerAddress, CustomerContact, CustomerContract, CustomerStatusEnum } from '../entities';
 import { AddressTypeEnum } from '../entities/customer-address.entity';
 import { ContractStatusEnum } from '../entities/customer-contract.entity';
+import { CustomerNumberFormatService } from '../customer-number-format/customer-number-format.service';
 
 export type CustomerStatus = 'ACTIVE' | 'INACTIVE';
 export type AddressType = 'BILLING' | 'SHIPPING' | 'OFFICE';
@@ -28,6 +29,7 @@ export class CustomerService {
     @InjectRepository(CustomerContact) private readonly contactRepo: Repository<CustomerContact>,
     @InjectRepository(CustomerAddress) private readonly addressRepo: Repository<CustomerAddress>,
     @InjectRepository(CustomerContract) private readonly contractRepo: Repository<CustomerContract>,
+    private readonly numberFmt: CustomerNumberFormatService,
   ) {}
 
   // Customers
@@ -81,7 +83,22 @@ export class CustomerService {
   }
 
   async add(body: any) {
-    const customerCode = this.reqString(body.customerCode, 'customerCode');
+    // Generate customerCode if not provided
+    let customerCode: string;
+    if (typeof body.customerCode === 'string' && body.customerCode.trim()) {
+      customerCode = body.customerCode.trim();
+    } else {
+      const orgId = body.orgId ?? undefined;
+      let attempts = 0;
+      while (true) {
+        attempts += 1;
+        const gen = await this.numberFmt.generate({ target: 'CUSTOMER_NO', orgId });
+        customerCode = gen.value;
+        const exists = await this.customerRepo.findOne({ where: { customerCode } });
+        if (!exists) break;
+        if (attempts >= 3) throw new ConflictException('Unable to allocate unique customerCode');
+      }
+    }
     const customerName = this.reqString(body.customerName, 'customerName');
     const status: CustomerStatusEnum = body.status === 'INACTIVE' ? CustomerStatusEnum.INACTIVE : CustomerStatusEnum.ACTIVE;
 

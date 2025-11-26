@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CustomerListDisplaySetting, CustomerNumberFormatSetting, CustomerSerialCounter, DateOptions, FiscalYearOptions, FormatPart, LiteralOptions, NumberFormatScope, NumberFormatTarget, PartType, ResetPolicy, SerialOptions } from '../entities/customer-number-format.entity';
+import { Org } from '../entities';
 
 @Injectable()
 export class CustomerNumberFormatService {
@@ -13,6 +14,8 @@ export class CustomerNumberFormatService {
     private readonly counterRepo: Repository<CustomerSerialCounter>,
     @InjectRepository(CustomerListDisplaySetting)
     private readonly displayRepo: Repository<CustomerListDisplaySetting>,
+    @InjectRepository(Org)
+    private readonly orgRepo: Repository<Org>,
   ) {}
 
   // Settings CRUD
@@ -78,8 +81,9 @@ export class CustomerNumberFormatService {
           return found;
         })()
       : await (async () => this.fmtRepo.create(this.parseSettingShape(body.config)))();
-    const value = await this.buildValue(cfg, date, orgId, /*serial*/ undefined, /*increment*/ false);
-    return { sample: value, parts: this.expandParts(cfg, date, orgId) };
+    const value = await this.buildValue(cfg, date, orgId, /*serial*/ undefined);
+    const parts = await this.expandParts(cfg, date, orgId);
+    return { sample: value, parts };
   }
 
   async generate(body: any) {
@@ -93,25 +97,38 @@ export class CustomerNumberFormatService {
 
   private async generateWithCounter(cfg: CustomerNumberFormatSetting, date: string, orgId?: string) {
     return await this.dataSource.transaction('READ COMMITTED', async (manager) => {
-      // Determine serial context keys required by the config
-      const serialCtxs = this.computeSerialContexts(cfg, date, orgId);
+      // Determine serial contexts with options
+      const serialCtxs = this.computeSerialContextsWithOptions(cfg, date, orgId);
       const serialMap: Record<string, number> = {};
       for (const ctx of serialCtxs) {
-        // lock or create counter
-        let counter = await manager.getRepository(CustomerSerialCounter).findOne({ where: { formatSetting: { id: cfg.id } as any, contextKey: ctx } });
+        const repo = manager.getRepository(CustomerSerialCounter);
+        let counter = await repo
+          .createQueryBuilder('c')
+          .setLock('pessimistic_write')
+          .where('c.formatSettingId = :fid AND c.contextKey = :ck', { fid: cfg.id, ck: ctx.key })
+          .getOne();
         if (!counter) {
-          counter = manager.getRepository(CustomerSerialCounter).create({
-            formatSetting: { id: cfg.id } as any,
-            contextKey: ctx,
-            currentValue: 0,
-          });
+          // try insert; handle race by catching unique violation
+          try {
+            counter = repo.create({ formatSetting: { id: cfg.id } as any, contextKey: ctx.key, currentValue: ctx.startFrom || 0 });
+            await repo.save(counter);
+          } catch (e: any) {
+            // unique -> reselect with lock
+            counter = await repo
+              .createQueryBuilder('c')
+              .setLock('pessimistic_write')
+              .where('c.formatSettingId = :fid AND c.contextKey = :ck', { fid: cfg.id, ck: ctx.key })
+              .getOne();
+            if (!counter) throw e;
+          }
         }
-        // increment
-        counter.currentValue += 1;
-        await manager.getRepository(CustomerSerialCounter).save(counter);
-        serialMap[ctx] = counter.currentValue;
+        const current = counter.currentValue ?? 0;
+        const nextVal = (Number.isFinite(current) ? current : 0) + (ctx.step || 1);
+        counter.currentValue = nextVal;
+        await repo.save(counter);
+        serialMap[ctx.key] = nextVal;
       }
-      const value = await this.buildValue(cfg, date, orgId, serialMap, /*increment*/ true);
+      const value = await this.buildValue(cfg, date, orgId, serialMap);
       return { value };
     });
   }
@@ -151,19 +168,18 @@ export class CustomerNumberFormatService {
     date: string,
     orgId?: string,
     serialValues?: Record<string, number>,
-    increment?: boolean,
   ): Promise<string> {
-    const parts = this.expandParts(cfg, date, orgId, serialValues);
+    const parts = await this.expandParts(cfg, date, orgId, serialValues);
     const joiner = cfg.joiner ?? '';
     return parts.map((p) => p.value).filter((v) => v !== '').join(joiner);
   }
 
-  private expandParts(
+  private async expandParts(
     cfg: CustomerNumberFormatSetting,
     date: string,
     orgId?: string,
     serialValues?: Record<string, number>,
-  ): { type: PartType; value: string }[] {
+  ): Promise<{ type: PartType; value: string }[]> {
     const out: { type: PartType; value: string }[] = [];
     for (const p of cfg.parts || []) {
       switch (p.type) {
@@ -175,8 +191,9 @@ export class CustomerNumberFormatService {
         }
         case 'ORG_CODE': {
           if (!orgId) throw new BadRequestException('orgId required for ORG_CODE');
-          // keep as placeholder string; real implementation could join Org table if needed
-          out.push({ type: 'ORG_CODE', value: `ORG:${orgId}` });
+          const org = await this.orgRepo.findOne({ where: { id: orgId } });
+          if (!org) throw new BadRequestException('orgId invalid for ORG_CODE');
+          out.push({ type: 'ORG_CODE', value: String(org.orgCode || '').trim() });
           break;
         }
         case 'DATE': {
@@ -194,10 +211,11 @@ export class CustomerNumberFormatService {
         case 'SERIAL': {
           const opt = (p.options as SerialOptions) || ({} as SerialOptions);
           const ctx = this.serialContextKey(cfg, opt, date, orgId);
-          const seq = serialValues?.[ctx] ?? (opt.startFrom || 0) + 1; // preview fallback
           const step = opt.step && opt.step > 0 ? opt.step : 1;
-          const val = seq * step + 0 - step + 1; // if seq is 1..n, apply step starting at 1
-          out.push({ type: 'SERIAL', value: String(val).padStart(Math.min(Math.max(opt.digits || 4, 1), 12), '0') });
+          const startFrom = Number.isFinite(opt.startFrom as any) ? Number(opt.startFrom) : 0;
+          const valNum = serialValues?.[ctx] ?? startFrom + step; // preview fallback: first next value
+          const digits = Math.min(Math.max(opt.digits || 4, 1), 12);
+          out.push({ type: 'SERIAL', value: String(valNum).padStart(digits, '0') });
           break;
         }
         default:
@@ -207,14 +225,17 @@ export class CustomerNumberFormatService {
     return out;
   }
 
-  private computeSerialContexts(cfg: CustomerNumberFormatSetting, date: string, orgId?: string): string[] {
-    const keys: string[] = [];
+  private computeSerialContextsWithOptions(cfg: CustomerNumberFormatSetting, date: string, orgId?: string): { key: string; step: number; startFrom: number }[] {
+    const items: { key: string; step: number; startFrom: number }[] = [];
     for (const p of cfg.parts || []) {
       if (p.type !== 'SERIAL') continue;
-      const ctx = this.serialContextKey(cfg, (p.options as SerialOptions) || ({} as SerialOptions), date, orgId);
-      if (!keys.includes(ctx)) keys.push(ctx);
+      const opt = (p.options as SerialOptions) || ({} as SerialOptions);
+      const key = this.serialContextKey(cfg, opt, date, orgId);
+      const step = opt.step && opt.step > 0 ? opt.step : 1;
+      const startFrom = Number.isFinite(opt.startFrom as any) ? Number(opt.startFrom) : 0;
+      if (!items.find((x) => x.key === key)) items.push({ key, step, startFrom });
     }
-    return keys;
+    return items;
   }
 
   private serialContextKey(cfg: CustomerNumberFormatSetting, opt: SerialOptions, date: string, orgId?: string) {
@@ -368,4 +389,3 @@ export class CustomerNumberFormatService {
     return y - 1;
   }
 }
-
