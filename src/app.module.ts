@@ -16,6 +16,7 @@ import {
   ContractCourse,
   CourseGroup,
   CourseCategory,
+  ReservationStoreSetting,
 } from './entities';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -30,6 +31,7 @@ import { CustomerNumberFormatModule } from './customer-number-format/customer-nu
 import { CourseMasterModule } from './course-master/course-master.module';
 import { CourseGroupMasterModule } from './course-group-master/course-group-master.module';
 import { CourseCategoryMasterModule } from './course-category-master/course-category-master.module';
+import { ReservationStoreSettingModule } from './reservation-store-setting/reservation-store-setting.module';
 @Module({
   imports: [
     UsersModule,
@@ -43,6 +45,7 @@ import { CourseCategoryMasterModule } from './course-category-master/course-cate
     CourseMasterModule,
     CourseGroupMasterModule,
     CourseCategoryMasterModule,
+    ReservationStoreSettingModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         type: 'postgres',
@@ -68,6 +71,7 @@ import { CourseCategoryMasterModule } from './course-category-master/course-cate
           ContractCourse,
           CourseGroup,
           CourseCategory,
+          ReservationStoreSetting,
         ],
       }),
     })

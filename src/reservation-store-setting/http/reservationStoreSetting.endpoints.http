@@ -1,0 +1,64 @@
+### Get Reservation Store Setting for an Org
+GET http://localhost:4200/reservationManagement/storeSetting/9f4f98d7-ffcf-4af4-89b3-1858b26c79de
+
+### Upsert Reservation Store Setting for an Org
+PUT http://localhost:4200/reservationManagement/storeSetting/9f4f98d7-ffcf-4af4-89b3-1858b26c79de
+Content-Type: application/json
+
+{
+  "specialHolidays": [
+    {
+      "holidayPeriodFrom": "2025-01-01",
+      "holidayPeriodTo": "2025-01-03"
+    },
+    {
+      "holidayPeriodFrom": "2025-02-11",
+      "holidayPeriodTo": "2025-02-11"
+    }
+  ],
+  "mailAddress": [
+    {
+      "reserveNotification": "frontdesk@example.com"
+    },
+    {
+      "reserveNotification": "manager@example.com"
+    }
+  ],
+  "frameRequests": [
+    {
+      "courseGroupId": "709cbd91-ca74-4f0b-a7a4-79d87deed3ca",
+      "courseGroupName": "Facial Treatments",
+      "courseGroupCode": "FACIAL",
+      "initialReservationCount": 0,
+      "max": 10
+    }
+  ],
+  "possibleDayCode": 15,
+  "possibleMonthCode": "1",
+  "publicHoliday": true,
+  "regularHolidayMonday": false,
+  "regularHolidayTuesday": false,
+  "regularHolidayWednesday": false,
+  "regularHolidayThursday": false,
+  "regularHolidayFriday": false,
+  "regularHolidaySaturday": false,
+  "regularHolidaySunday": false,
+  "weekDayBiztimeEnd": "21:00",
+  "weekDayBiztimeStart": "09:00",
+  "weekendDayBiztimeEnd": "21:00",
+  "weekendDayBiztimeStart": "09:00",
+  "holidayBiztimeEnd": "21:00",
+  "holidayBiztimeStart": "09:00",
+  "ifMatchVersion": 1
+}
+
+### Notes
+# - Path parameter :orgId is the Org UUID.
+# - All boolean flags must be provided explicitly.
+# - Time fields must be in 'HH:mm' format (24-hour).
+# - Arrays (specialHolidays, frameRequests, mailAddress) are stored as JSONB without additional validation.
+# - possibleMonthCode: '0' = 当月, '1' = 翌月, '2' = 翌々月.
+# - possibleDayCode: 1..31, meaning the day-of-month limit within the target month.
+# - frameRequests items align with frontend: { initialReservationCount, courseGroupName, max, ... }.
+# - ifMatchVersion is optional; when provided and mismatched, the API returns 409 Conflict.
+
