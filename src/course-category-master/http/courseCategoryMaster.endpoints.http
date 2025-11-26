@@ -1,0 +1,42 @@
+### List CourseCategoryMaster
+GET http://localhost:4200/courseCategoryMaster?page=1&pageSize=20&status=ACTIVE&sortBy=sortOrder&sortOrder=asc
+
+### Add new Course Category
+POST http://localhost:4200/courseCategoryMaster/add
+Content-Type: application/json
+
+{
+  "categoryCode": "FACIAL_BASIC",
+  "categoryName": "Facial Basic",
+  "groupId": "709cbd91-ca74-4f0b-a7a4-79d87deed3ca",
+  "orgId": null,
+  "applyStartDate": "2025-01-01",
+  "applyEndDate": null,
+  "status": "ACTIVE",
+  "sortOrder": 10,
+  "description": "Basic facial category under Facial group"
+}
+
+### Edit Course Category
+PUT http://localhost:4200/courseCategoryMaster/edit/REPLACE_CATEGORY_ID
+Content-Type: application/json
+
+{
+  "categoryName": "Facial Basic Updated",
+  "status": "ACTIVE",
+  "sortOrder": 20,
+  "applyEndDate": null,
+  "description": "Updated description",
+  "ifMatchVersion": 1
+}
+
+### Get one Course Category
+GET http://localhost:4200/courseCategoryMaster/REPLACE_CATEGORY_ID
+
+### Notes
+# - categoryCode is unique across course_categories.
+# - status must be one of ACTIVE | INACTIVE.
+# - applyEndDate must be greater than applyStartDate when provided.
+# - groupId should reference an existing CourseGroup.
+# - ifMatchVersion should be the current version to avoid lost updates on edit.
+

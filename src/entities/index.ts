@@ -10,3 +10,4 @@ export * from './executive.entity';
 export * from './customer-number-format.entity';
 export * from './contract-course.entity';
 export * from './course-group.entity';
+export * from './course-category.entity';
