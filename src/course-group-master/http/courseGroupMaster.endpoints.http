@@ -1,0 +1,41 @@
+### List CourseGroupMaster
+GET http://localhost:4200/courseGroupMaster?page=1&pageSize=20&status=ACTIVE&search=facial&sortBy=sortOrder&sortOrder=asc
+
+### Add new Course Group
+POST http://localhost:4200/courseGroupMaster/add
+Content-Type: application/json
+
+{
+  "groupCode": "FACIAL",
+  "groupName": "Facial Treatments",
+  "applyStartDate": "2025-01-01",
+  "applyEndDate": null,
+  "status": "ACTIVE",
+  "sortOrder": 10,
+  "parentId": null,
+  "orgId": null,
+  "description": "Top-level group for facial services"
+}
+
+### Edit Course Group
+PUT http://localhost:4200/courseGroupMaster/edit/REPLACE_GROUP_ID
+Content-Type: application/json
+
+{
+  "groupName": "Facial & Skin Care",
+  "status": "ACTIVE",
+  "sortOrder": 20,
+  "applyEndDate": null,
+  "description": "Updated description",
+  "ifMatchVersion": 1
+}
+
+### Get one Course Group
+GET http://localhost:4200/courseGroupMaster/REPLACE_GROUP_ID
+
+### Notes
+# - groupCode is unique across course_groups.
+# - status must be one of ACTIVE | INACTIVE.
+# - applyEndDate must be greater than applyStartDate when provided.
+# - ifMatchVersion should be the current version to avoid lost updates on edit.
+

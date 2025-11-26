@@ -14,6 +14,7 @@ import {
   CustomerNumberFormatSetting,
   CustomerSerialCounter,
   ContractCourse,
+  CourseGroup,
 } from './entities';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module';
 import { ExecutiveMasterModule } from './executive-master/executive-master.module';
 import { CustomerNumberFormatModule } from './customer-number-format/customer-number-format.module';
 import { CourseMasterModule } from './course-master/course-master.module';
+import { CourseGroupMasterModule } from './course-group-master/course-group-master.module';
 @Module({
   imports: [
     UsersModule,
@@ -37,6 +39,7 @@ import { CourseMasterModule } from './course-master/course-master.module';
     CustomerModule,
     RoleMasterModule,
     CourseMasterModule,
+    CourseGroupMasterModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         type: 'postgres',
@@ -60,6 +63,7 @@ import { CourseMasterModule } from './course-master/course-master.module';
           CustomerSerialCounter,
           CustomerListDisplaySetting,
           ContractCourse,
+          CourseGroup,
         ],
       }),
     })
