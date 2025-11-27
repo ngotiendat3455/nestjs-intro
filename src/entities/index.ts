@@ -12,3 +12,8 @@ export * from './contract-course.entity';
 export * from './course-group.entity';
 export * from './course-category.entity';
 export * from './reservation-store-setting.entity';
+export * from './reserve-frame.entity';
+export * from './reserve-frame-not-possible-time.entity';
+export * from './media.entity';
+export * from './media-version.entity';
+export * from './media-version-org.entity';

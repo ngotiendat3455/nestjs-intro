@@ -17,6 +17,11 @@ import {
   CourseGroup,
   CourseCategory,
   ReservationStoreSetting,
+  ReserveFrame,
+  ReserveFrameNotPossibleTime,
+  Media,
+  MediaVersion,
+  MediaVersionOrg,
 } from './entities';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -32,6 +37,7 @@ import { CourseMasterModule } from './course-master/course-master.module';
 import { CourseGroupMasterModule } from './course-group-master/course-group-master.module';
 import { CourseCategoryMasterModule } from './course-category-master/course-category-master.module';
 import { ReservationStoreSettingModule } from './reservation-store-setting/reservation-store-setting.module';
+import { MediaMasterModule } from './media-master/media-master.module';
 @Module({
   imports: [
     UsersModule,
@@ -46,6 +52,7 @@ import { ReservationStoreSettingModule } from './reservation-store-setting/reser
     CourseGroupMasterModule,
     CourseCategoryMasterModule,
     ReservationStoreSettingModule,
+    MediaMasterModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         type: 'postgres',
@@ -72,6 +79,11 @@ import { ReservationStoreSettingModule } from './reservation-store-setting/reser
           CourseGroup,
           CourseCategory,
           ReservationStoreSetting,
+          ReserveFrame,
+          ReserveFrameNotPossibleTime,
+          Media,
+          MediaVersion,
+          MediaVersionOrg,
         ],
       }),
     })
