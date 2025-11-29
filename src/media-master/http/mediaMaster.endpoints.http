@@ -1,0 +1,47 @@
+### List Media (PosMediaMaster search)
+GET http://localhost:4200/mediaMaster?orgIds=9f4f98d7-ffcf-4af4-89b3-1858b26c79de&isAppluUnderOrg=false&targetDate=2025-01-01&keyWord=&mediaSearchType=ALL
+
+### List Media for specific org and date, only VALID
+GET http://localhost:4200/mediaMaster?orgIds={{ORG_ID}}&isAppluUnderOrg=false&targetDate=2025-01-01&keyWord=&mediaSearchType=VALID
+
+### Get Media Detail (for edit button)
+GET http://localhost:4200/mediaMaster/detail?mediaId={{MEDIA_ID}}&targetDate=2025-01-01&mediaSearchType=VALID
+
+### Create new Media
+POST http://localhost:4200/mediaMaster?applyDate=2025-01-01&applyStartDate=2025-01-01&mediaId=&mediaSearchType=VALID&invalidChangeFlag=0
+Content-Type: application/json
+
+{
+  "dispOrder": 10,
+  "mediaCode": "WEB_AD",
+  "mediaName": "Web Advertising",
+  "mediaCategory": 1,
+  "effective": true,
+  "orgIds": [
+    "9f4f98d7-ffcf-4af4-89b3-1858b26c79de"
+    // "{{ORG_ID_2}}"
+  ]
+}
+
+### Update existing Media (change name/order/effective/orgs)
+POST http://localhost:4200/mediaMaster?applyDate=2025-11-30&applyStartDate=2025-11-30&mediaId=c40d5902-8beb-4830-9dde-f6c3ac8cc189&mediaSearchType=VALID&invalidChangeFlag=1
+Content-Type: application/json
+
+{
+  "dispOrder": 11,
+  "mediaCode": "WEB_AD",
+  "mediaName": "Web Advertising Updated 2",
+  "mediaCategory": 1,
+  "effective": false,
+  "orgIds": [
+    "9f4f98d7-ffcf-4af4-89b3-1858b26c79de"
+  ]
+}
+
+### Notes
+# - mediaCode should be unique across medias.
+# - mediaCategory must match numeric values used in MEDIA_CATEGORY_GROUP on FE.
+# - targetDate / applyDate / applyStartDate are YYYY-MM-DD.
+# - orgIds should be UUIDs of org records.
+# - invalidChangeFlag is currently accepted but not deeply interpreted; 0/1/2 are all allowed.
+
