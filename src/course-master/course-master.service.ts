@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ContractCourse, ContractCourseStatus } from '../entities';
+import { ContractCourse, ContractCourseStatus, CourseCategory, CourseGroup } from '../entities';
 
 type CourseStatus = 'ACTIVE' | 'INACTIVE';
 
@@ -17,6 +17,10 @@ export class CourseMasterService {
   constructor(
     @InjectRepository(ContractCourse)
     private readonly repo: Repository<ContractCourse>,
+    @InjectRepository(CourseGroup)
+    private readonly groupRepo: Repository<CourseGroup>,
+    @InjectRepository(CourseCategory)
+    private readonly categoryRepo: Repository<CourseCategory>,
   ) {}
 
   async list(query: ListQuery) {
@@ -60,6 +64,18 @@ export class CourseMasterService {
       body.status === 'INACTIVE' ? ContractCourseStatus.INACTIVE : ContractCourseStatus.ACTIVE;
     const description = body.description ?? null;
 
+    let courseGroup: CourseGroup | null = null;
+    if (body.contractCourseGroupId) {
+      courseGroup = await this.groupRepo.findOne({ where: { id: String(body.contractCourseGroupId) } });
+      if (!courseGroup) throw new NotFoundException('CourseGroup not found');
+    }
+
+    let courseCategory: CourseCategory | null = null;
+    if (body.contractCourseCategoryId) {
+      courseCategory = await this.categoryRepo.findOne({ where: { id: String(body.contractCourseCategoryId) } });
+      if (!courseCategory) throw new NotFoundException('CourseCategory not found');
+    }
+
     const dup = await this.repo.findOne({ where: { courseCode } });
     if (dup) throw new ConflictException('courseCode already exists');
 
@@ -68,6 +84,8 @@ export class CourseMasterService {
       courseName,
       status,
       description,
+      courseGroup: courseGroup ? ({ id: courseGroup.id } as any) : null,
+      courseCategory: courseCategory ? ({ id: courseCategory.id } as any) : null,
     });
     const saved = await this.repo.save(entity);
     return saved;
@@ -100,6 +118,24 @@ export class CourseMasterService {
     if (body.description !== undefined) {
       rec.description = body.description ?? null;
     }
+    if (body.contractCourseGroupId !== undefined) {
+      if (body.contractCourseGroupId === null || body.contractCourseGroupId === '') {
+        rec.courseGroup = null;
+      } else {
+        const group = await this.groupRepo.findOne({ where: { id: String(body.contractCourseGroupId) } });
+        if (!group) throw new NotFoundException('CourseGroup not found');
+        rec.courseGroup = group as any;
+      }
+    }
+    if (body.contractCourseCategoryId !== undefined) {
+      if (body.contractCourseCategoryId === null || body.contractCourseCategoryId === '') {
+        rec.courseCategory = null;
+      } else {
+        const category = await this.categoryRepo.findOne({ where: { id: String(body.contractCourseCategoryId) } });
+        if (!category) throw new NotFoundException('CourseCategory not found');
+        rec.courseCategory = category as any;
+      }
+    }
 
     const saved = await this.repo.save(rec);
     return saved;
@@ -112,4 +148,3 @@ export class CourseMasterService {
     return v.trim();
   }
 }
-

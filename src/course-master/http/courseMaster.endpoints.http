@@ -4,13 +4,30 @@ GET http://localhost:4200/courseMaster?page=1&pageSize=20&status=ACTIVE&search=b
 ### Add new Contract Course
 POST http://localhost:4200/courseMaster/add
 Content-Type: application/json
-
 {
-  "courseCode": "COURSE001",
-  "courseName": "Basic Plan",
+  "courseCode": "NBO90",
+  "courseName": "[New] 90-Minute Body Experience",
   "status": "ACTIVE",
-  "description": "Standard contract course"
+  "description": "90-Minute Body Experience Course for New Customers",
+  "contractCourseGroupId": "9b280e4f-67e0-4204-a8f4-82d6fd55c2d2",
+  "contractCourseCategoryId": "07dbd43a-859a-4f0d-9976-3c7cf5484fe3"
 }
+// {
+//   "courseCode": "NFA60",
+//   "courseName": "[New] 60-Minute Facial Experience",
+//   "status": "ACTIVE",
+//   "description": "60-Minute Facial Experience Course for New Customers",
+//   "contractCourseGroupId": "9b280e4f-67e0-4204-a8f4-82d6fd55c2d2",
+//   "contractCourseCategoryId": "07dbd43a-859a-4f0d-9976-3c7cf5484fe3"
+// }
+// {
+//   "courseCode": "COURSE001",
+//   "courseName": "Basic Plan",
+//   "status": "ACTIVE",
+//   "description": "Standard contract course",
+//   "contractCourseGroupId": "REPLACE_COURSE_GROUP_ID",
+//   "contractCourseCategoryId": "REPLACE_COURSE_CATEGORY_ID"
+// }
 
 ### Get Contract Course by contractCourseId
 GET http://localhost:4200/courseMaster/REPLACE_CONTRACT_COURSE_ID
@@ -23,6 +40,8 @@ Content-Type: application/json
   "courseName": "Basic Plan Updated",
   "status": "INACTIVE",
   "description": "Updated description",
+  "contractCourseGroupId": "REPLACE_COURSE_GROUP_ID_OR_NULL",
+  "contractCourseCategoryId": "REPLACE_COURSE_CATEGORY_ID_OR_NULL",
   "ifMatchVersion": 1
 }
 
@@ -30,4 +49,5 @@ Content-Type: application/json
 # - courseCode is unique across contract_courses.
 # - status must be one of ACTIVE | INACTIVE.
 # - ifMatchVersion should be the current version to avoid lost updates.
-
+# - contractCourseGroupId and contractCourseCategoryId are optional and
+#   must reference existing CourseGroup / CourseCategory when provided.

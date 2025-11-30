@@ -13,6 +13,7 @@ import {
   CustomerListDisplaySetting,
   CustomerNumberFormatSetting,
   CustomerSerialCounter,
+  CustomerReverberation,
   ContractCourse,
   CourseGroup,
   CourseCategory,
@@ -22,6 +23,11 @@ import {
   Media,
   MediaVersion,
   MediaVersionOrg,
+  Reservation,
+  StaffDailySetting,
+  StaffNotPossibleTime,
+  ReservationCourseSetting,
+  ReservationCourseSettingOrg,
 } from './entities';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -38,6 +44,9 @@ import { CourseGroupMasterModule } from './course-group-master/course-group-mast
 import { CourseCategoryMasterModule } from './course-category-master/course-category-master.module';
 import { ReservationStoreSettingModule } from './reservation-store-setting/reservation-store-setting.module';
 import { MediaMasterModule } from './media-master/media-master.module';
+import { ReservationModule } from './reservation/reservation.module';
+import { ReservationExistingCustomerCourseModule } from './reservation-existing-customer-course/reservation-existing-customer-course.module';
+import { ReservationNewCustomerCourseModule } from './reservation-new-customer-course/reservation-new-customer-course.module';
 @Module({
   imports: [
     UsersModule,
@@ -53,6 +62,9 @@ import { MediaMasterModule } from './media-master/media-master.module';
     CourseCategoryMasterModule,
     ReservationStoreSettingModule,
     MediaMasterModule,
+    ReservationModule,
+    ReservationExistingCustomerCourseModule,
+    ReservationNewCustomerCourseModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         type: 'postgres',
@@ -75,6 +87,7 @@ import { MediaMasterModule } from './media-master/media-master.module';
           CustomerNumberFormatSetting,
           CustomerSerialCounter,
           CustomerListDisplaySetting,
+          CustomerReverberation,
           ContractCourse,
           CourseGroup,
           CourseCategory,
@@ -84,6 +97,11 @@ import { MediaMasterModule } from './media-master/media-master.module';
           Media,
           MediaVersion,
           MediaVersionOrg,
+          Reservation,
+          StaffDailySetting,
+          StaffNotPossibleTime,
+          ReservationCourseSetting,
+          ReservationCourseSettingOrg,
         ],
       }),
     })

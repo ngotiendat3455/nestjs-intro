@@ -2,7 +2,7 @@
 GET http://localhost:3000/customer?page=1&pageSize=20&search=acme&status=ACTIVE
 
 ### Get one customer (with nested)
-GET http://localhost:3000/customer/CUS-001
+GET http://localhost:4200/customer/a42b6538-9dc4-4406-b5ac-a7b99fe243e7
 
 ### Add a customer
 POST http://localhost:3000/customer/add

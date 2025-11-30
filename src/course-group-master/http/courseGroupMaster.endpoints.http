@@ -5,18 +5,28 @@ GET http://localhost:4200/courseGroupMaster?page=1&pageSize=20&status=ACTIVE&sea
 POST http://localhost:4200/courseGroupMaster/add
 Content-Type: application/json
 
+// {
+//   "groupCode": "FACIAL",
+//   "groupName": "Facial Treatments",
+//   "applyStartDate": "2025-01-01",
+//   "applyEndDate": null,
+//   "status": "ACTIVE",
+//   "sortOrder": 10,
+//   "parentId": null,
+//   "orgId": null,
+//   "description": "Top-level group for facial services"
+// }
 {
-  "groupCode": "FACIAL",
-  "groupName": "Facial Treatments",
+  "groupCode": "TRIAL",
+  "groupName": "Trial Menu",
   "applyStartDate": "2025-01-01",
   "applyEndDate": null,
   "status": "ACTIVE",
   "sortOrder": 10,
   "parentId": null,
-  "orgId": null,
-  "description": "Top-level group for facial services"
+  "orgId": "9f4f98d7-ffcf-4af4-89b3-1858b26c79de",
+  "description": "Top-level group for trial menu"
 }
-
 ### Edit Course Group
 PUT http://localhost:4200/courseGroupMaster/edit/REPLACE_GROUP_ID
 Content-Type: application/json

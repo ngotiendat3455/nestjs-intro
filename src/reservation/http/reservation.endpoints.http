@@ -1,0 +1,64 @@
+### Create reservation for existing customer
+POST http://localhost:4200/reservations
+Content-Type: application/json
+
+{
+  "customerId": "a42b6538-9dc4-4406-b5ac-a7b99fe243e7",
+  "orgId": "9f4f98d7-ffcf-4af4-89b3-1858b26c79de",
+  "contractCourseId": "5a21c178-7014-46bf-9edb-7e5c389e6af8",
+  "contractCourseGroupId": "709cbd91-ca74-4f0b-a7a4-79d87deed3ca",
+  "targetDate": "2025-12-01",
+  "desiredTime": "10:30",
+  "treatmentTime": 60,
+  "mediaId": "c40d5902-8beb-4830-9dde-f6c3ac8cc189",
+  "requests": "肩こりがひどいです",
+  "managementNumber": "R-2025-0001",
+  "responsibleStaffId": "5c80eb03-f5ea-4626-9a58-3864667e2375",
+  "customerClass": "EXISTING",
+  "note": "Initial reservation for existing customer"
+}
+
+### List reservations for org within date range
+GET http://localhost:4200/reservations?orgId=9f4f98d7-ffcf-4af4-89b3-1858b26c79de&startDate=2025-12-01&endDate=2025-12-31
+
+### Notes
+# - customerId, orgId, contractCourseId, contractCourseGroupId are required UUIDs.
+# - targetDate: YYYY-MM-DD, desiredTime: HH:mm.
+# - treatmentTime (minutes); if you pass 0 you may later change service to read default from course.
+# - managementNumber can be generated on FE or BE depending on your needs.
+# - This endpoint automatically finds or creates a ReserveFrame for the given org + date + course group + time range.
+
+### Create reservation for NEW customer (temporary)
+POST http://localhost:4200/reservations/new-customer
+Content-Type: application/json
+
+{
+  "birthDate": "1990-04-15",
+  "contractCourseId": "15ac6742-01c6-4d6f-b8ce-9f4318315bba",
+  "customerFirstName": "太郎",
+  "customerFirstNameKana": "たろう",
+  "customerLastName": "山田",
+  "customerLastNameKana": "やまだ",
+  "phoneNumber": "09012345678",
+  "desiredTime": "2025-12-05 11:00:00",
+  "frameId": "0",
+  "requests": "初回体験を希望",
+  "orgId": "9f4f98d7-ffcf-4af4-89b3-1858b26c79de",
+  "courseGroupId": "9b280e4f-67e0-4204-a8f4-82d6fd55c2d2",
+  "treatmentTime": 60,
+  "mediaCode": "WEB_AD"
+}
+
+### Add customer reverberation
+POST http://localhost:4200/customer/a42b6538-9dc4-4406-b5ac-a7b99fe243e7/reverberations
+Content-Type: application/json
+
+{
+  "lastVisitDate": null,
+  "firstVisitDate": "2025-12-05",
+  "firstPersonStaffId": null,
+  "mediaId": "c40d5902-8beb-4830-9dde-f6c3ac8cc189",
+  "courseCategoryId": "07dbd43a-859a-4f0d-9976-3c7cf5484fe3",
+  "contractCourseMstId": "15ac6742-01c6-4d6f-b8ce-9f4318315bba",
+  "reverberationDate": "2025-12-05T00:00:00+09:00"
+}

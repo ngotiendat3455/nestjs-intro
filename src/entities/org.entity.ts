@@ -24,6 +24,11 @@ export class Org {
   @Column({ type: 'varchar', length: 64 })
   orgCode: string;
 
+  // Logical tenant key. Nullable for now to avoid breaking existing data;
+  // can be enforced as NOT NULL once multi-tenant data is prepared.
+  @Column({ type: 'varchar', length: 32, nullable: true })
+  companyCode?: string | null;
+
   @Column({ type: 'varchar', length: 255 })
   orgName: string;
 
@@ -54,4 +59,3 @@ export class Org {
   @VersionColumn()
   version: number;
 }
-

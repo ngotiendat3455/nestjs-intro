@@ -1,0 +1,37 @@
+### List new-customer reservation courses
+GET http://localhost:4200/reservation/new-customer-courses?keyword=
+
+### Get detail for one new-customer reservation course
+GET http://localhost:4200/reservation/new-customer-courses/detail?courseId=9a22d28d-14f8-4d64-a00e-cd93700d88e9
+
+### Upsert (add/update) new-customer reservation course setting
+POST http://localhost:4200/reservation/new-customer-courses
+Content-Type: application/json
+{
+  "courseId": "9a22d28d-14f8-4d64-a00e-cd93700d88e9",
+  "classType": "1",
+  "displaySort": 10,
+  "treatmentTime": 90,
+  "timeZone": "",
+  "listOrgId": ["9f4f98d7-ffcf-4af4-89b3-1858b26c79de"]
+}
+// {
+//   "courseId": "{{CONTRACT_COURSE_ID}}",
+//   "classType": "1",
+//   "displaySort": 10,
+//   "treatmentTime": 60,
+//   "timeZone": "",
+//   "listOrgId": [
+//     "{{ORG_ID_1}}",
+//     "{{ORG_ID_2}}"
+//   ]
+// }
+
+### Delete new-customer reservation course settings
+DELETE http://localhost:4200/reservation/new-customer-courses?courseIds={{CONTRACT_COURSE_ID_1}}&courseIds={{CONTRACT_COURSE_ID_2}}
+
+### Notes
+# - courseId = contract_courses.contractCourseId; FE passes it as courseId.
+# - listOrgId can be either array of org UUIDs or objects; backend maps to orgIds.
+# - customerType is fixed to 'NEW' in this module.
+

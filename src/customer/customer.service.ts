@@ -1,7 +1,14 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Customer, CustomerAddress, CustomerContact, CustomerContract, CustomerStatusEnum } from '../entities';
+import {
+  Customer,
+  CustomerAddress,
+  CustomerContact,
+  CustomerContract,
+  CustomerReverberation,
+  CustomerStatusEnum,
+} from '../entities';
 import { AddressTypeEnum } from '../entities/customer-address.entity';
 import { ContractStatusEnum } from '../entities/customer-contract.entity';
 import { CustomerNumberFormatService } from '../customer-number-format/customer-number-format.service';
@@ -25,10 +32,16 @@ interface ListQuery {
 @Injectable()
 export class CustomerService {
   constructor(
-    @InjectRepository(Customer) private readonly customerRepo: Repository<Customer>,
-    @InjectRepository(CustomerContact) private readonly contactRepo: Repository<CustomerContact>,
-    @InjectRepository(CustomerAddress) private readonly addressRepo: Repository<CustomerAddress>,
-    @InjectRepository(CustomerContract) private readonly contractRepo: Repository<CustomerContract>,
+    @InjectRepository(Customer)
+    private readonly customerRepo: Repository<Customer>,
+    @InjectRepository(CustomerContact)
+    private readonly contactRepo: Repository<CustomerContact>,
+    @InjectRepository(CustomerAddress)
+    private readonly addressRepo: Repository<CustomerAddress>,
+    @InjectRepository(CustomerContract)
+    private readonly contractRepo: Repository<CustomerContract>,
+    @InjectRepository(CustomerReverberation)
+    private readonly reverberationRepo: Repository<CustomerReverberation>,
     private readonly numberFmt: CustomerNumberFormatService,
   ) {}
 
@@ -308,6 +321,25 @@ export class CustomerService {
     if (body.note !== undefined) c.note = body.note ?? null;
 
     return await this.contractRepo.save(c);
+  }
+
+  async addReverberation(customerId: string, body: any) {
+    await this.ensureCustomer(customerId);
+
+    const entity = this.reverberationRepo.create({
+      customer: { id: customerId } as any,
+      lastVisitDate: body.lastVisitDate ?? null,
+      firstVisitDate: body.firstVisitDate ?? null,
+      firstPersonStaffId: body.firstPersonStaffId ?? null,
+      mediaId: body.mediaId ?? null,
+      courseCategoryId: body.courseCategoryId ?? null,
+      contractCourseMstId: body.contractCourseMstId ?? null,
+      reverberationDate: body.reverberationDate
+        ? new Date(body.reverberationDate)
+        : new Date(),
+    });
+
+    return this.reverberationRepo.save(entity);
   }
 
   // Helpers

@@ -46,6 +46,11 @@ export class CustomerController {
     return this.service.edit(id, body);
   }
 
+  @Post(':id/reverberations')
+  addReverberation(@Param('id') id: string, @Body() body: any) {
+    return this.service.addReverberation(id, body);
+  }
+
   // Contacts
   @Get(':id/contacts')
   listContacts(@Param('id') id: string) {
@@ -96,4 +101,3 @@ export class CustomerController {
     return this.service.editContract(id, contractId, body);
   }
 }
-

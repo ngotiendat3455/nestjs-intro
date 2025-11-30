@@ -3,10 +3,14 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   VersionColumn,
 } from 'typeorm';
+import { CourseGroup } from './course-group.entity';
+import { CourseCategory } from './course-category.entity';
 
 export enum ContractCourseStatus {
   ACTIVE = 'ACTIVE',
@@ -25,6 +29,16 @@ export class ContractCourse {
   @Column({ type: 'varchar', length: 255 })
   courseName: string;
 
+  // Optional relation to course group master (contractCourseGroupId on FE)
+  @ManyToOne(() => CourseGroup, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'contractCourseGroupId' })
+  courseGroup?: CourseGroup | null;
+
+  // Optional relation to course category master (contractCourseCategoryId on FE)
+  @ManyToOne(() => CourseCategory, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'contractCourseCategoryId' })
+  courseCategory?: CourseCategory | null;
+
   @Column({ type: 'enum', enum: ContractCourseStatus, default: ContractCourseStatus.ACTIVE })
   status: ContractCourseStatus;
 
@@ -40,4 +54,3 @@ export class ContractCourse {
   @VersionColumn()
   version: number;
 }
-

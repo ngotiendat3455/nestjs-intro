@@ -1,0 +1,32 @@
+### List existing-customer reservation courses
+GET http://localhost:4200/reservation/existing-customer-courses?companyCode={{COMPANY_CODE}}&keyWord=
+
+### Get detail for one existing-customer reservation course
+GET http://localhost:4200/reservation/existing-customer-courses/detail?courseIds={{CONTRACT_COURSE_ID}}
+
+### Upsert (add/update) existing-customer reservation course setting
+POST http://localhost:4200/reservation/existing-customer-courses
+Content-Type: application/json
+
+{
+  "courseId": "5a21c178-7014-46bf-9edb-7e5c389e6af8",
+  "companyCode": "CP01",
+  "classType": "1",
+  "contractCourseCategoryId": "acc9c920-90da-48ca-8f8f-563188ce3cf6",
+  "contractCourseGroupId": "709cbd91-ca74-4f0b-a7a4-79d87deed3ca",
+  "displaySort": 10,
+  "treatmentTime": 60,
+  "timeZone": "",
+  "orgIds": [
+    "9f4f98d7-ffcf-4af4-89b3-1858b26c79de"
+  ]
+}
+
+### Delete existing-customer reservation course settings
+DELETE http://localhost:4200/reservation/existing-customer-courses?courseIds={{CONTRACT_COURSE_ID_1}}&courseIds={{CONTRACT_COURSE_ID_2}}
+
+### Notes
+# - courseId = contract_courses.contractCourseId used on FE as courseId.
+# - companyCode, contractCourseCategoryId, contractCourseGroupId are optional meta fields for existing-customer UI.
+# - orgIds should be UUIDs of org records.
+
