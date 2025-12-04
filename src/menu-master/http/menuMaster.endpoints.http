@@ -1,0 +1,33 @@
+### List MenuMaster
+GET http://localhost:4200/menuMaster?keyWord=BODY&targetDate=2025-01-01
+
+### Add new Menu
+POST http://localhost:4200/menuMaster/add
+Content-Type: application/json
+
+{
+  "dispSort": 1,
+  "menuCode": "M_BODY_60",
+  "menuName": "全身ボディ 60分",
+  "contractOptionGroupMstID": "REPLACE_WITH_MENU_CLASSIFICATION_ID",
+  "contractCourseGroupMstId": "REPLACE_WITH_COURSE_GROUP_ID",
+  "unitPrice": 9800,
+  "applyStartDate": "2025-01-01T00:00:00+0900",
+  "applyEndDate": "9999-01-01T00:00:00+0900"
+}
+
+### Edit Menu
+PUT http://localhost:4200/menuMaster/edit/REPLACE_WITH_CONTRACT_MENU_MST_ID
+Content-Type: application/json
+
+{
+  "dispSort": 2,
+  "menuName": "全身ボディ 60分（改定）",
+  "unitPrice": 10800,
+  "applyStartDate": "2025-02-01T00:00:00+0900",
+  "applyEndDate": "9999-01-01T00:00:00+0900"
+}
+
+### Delete multiple Menu
+DELETE http://localhost:4200/menuMaster?itemSectionIDs=ID1&itemSectionIDs=ID2
+

@@ -18,6 +18,7 @@ export * from './reserve-frame-not-possible-time.entity';
 export * from './media.entity';
 export * from './media-version.entity';
 export * from './media-version-org.entity';
+export * from './menu-master.entity';
 export * from './staff-daily-setting.entity';
 export * from './staff-not-possible-time.entity';
 export * from './reservation.entity';

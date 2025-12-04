@@ -29,6 +29,7 @@ import {
   ReservationCourseSetting,
   ReservationCourseSettingOrg,
   ContractOptionGroupMst,
+  ContractMenuMst,
 } from './entities';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -49,6 +50,7 @@ import { ReservationModule } from './reservation/reservation.module';
 import { ReservationExistingCustomerCourseModule } from './reservation-existing-customer-course/reservation-existing-customer-course.module';
 import { ReservationNewCustomerCourseModule } from './reservation-new-customer-course/reservation-new-customer-course.module';
 import { MenuClassificationMasterModule } from './menu-classification-master/menu-classification-master.module';
+import { MenuMasterModule } from './menu-master/menu-master.module';
 @Module({
   imports: [
     UsersModule,
@@ -68,6 +70,7 @@ import { MenuClassificationMasterModule } from './menu-classification-master/men
     ReservationExistingCustomerCourseModule,
     ReservationNewCustomerCourseModule,
     MenuClassificationMasterModule,
+    MenuMasterModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         type: 'postgres',
@@ -106,6 +109,7 @@ import { MenuClassificationMasterModule } from './menu-classification-master/men
           ReservationCourseSetting,
           ReservationCourseSettingOrg,
           ContractOptionGroupMst,
+          ContractMenuMst,
         ],
       }),
     })
