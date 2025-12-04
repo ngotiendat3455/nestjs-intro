@@ -30,6 +30,7 @@ import {
   ReservationCourseSettingOrg,
   ContractOptionGroupMst,
   ContractMenuMst,
+  TaxRate,
 } from './entities';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -51,6 +52,7 @@ import { ReservationExistingCustomerCourseModule } from './reservation-existing-
 import { ReservationNewCustomerCourseModule } from './reservation-new-customer-course/reservation-new-customer-course.module';
 import { MenuClassificationMasterModule } from './menu-classification-master/menu-classification-master.module';
 import { MenuMasterModule } from './menu-master/menu-master.module';
+import { TaxRateSettingModule } from './tax-rate-setting/tax-rate-setting.module';
 @Module({
   imports: [
     UsersModule,
@@ -71,6 +73,7 @@ import { MenuMasterModule } from './menu-master/menu-master.module';
     ReservationNewCustomerCourseModule,
     MenuClassificationMasterModule,
     MenuMasterModule,
+    TaxRateSettingModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         type: 'postgres',
@@ -110,6 +113,7 @@ import { MenuMasterModule } from './menu-master/menu-master.module';
           ReservationCourseSettingOrg,
           ContractOptionGroupMst,
           ContractMenuMst,
+          TaxRate,
         ],
       }),
     })

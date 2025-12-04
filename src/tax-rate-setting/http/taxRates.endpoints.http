@@ -1,0 +1,79 @@
+### List tax rate settings
+GET http://localhost:4200/taxRates?keyword=10&targetDate=2025-01-01
+
+### Get detail
+GET http://localhost:4200/taxRates/REPLACE_WITH_TAX_ID
+
+### Create new tax rate
+POST http://localhost:4200/taxRates
+Content-Type: application/json
+
+{
+  "taxRateType": 0,
+  "taxRate": 10,
+  "taxationUnit": 0,
+  "round": 0,
+  "applyStartDate": "2025-01-01"
+}
+
+### Update existing tax rate
+POST http://localhost:4200/taxRates
+Content-Type: application/json
+
+{
+  "taxId": "REPLACE_WITH_TAX_ID",
+  "taxRateType": 1,
+  "taxRate": 8,
+  "taxationUnit": 1,
+  "round": 2,
+  "applyStartDate": "2025-04-01"
+}
+
+### Delete multiple tax rates
+DELETE http://localhost:4200/taxRates?taxId=ID1&taxId=ID2
+
+/*
+taxRateType: loại thuế (standard / reduced / non-taxable…).
+taxationUnit: đơn vị áp thuế (per-line / per-bill / per-invoice…).
+round: cách làm tròn tiền thuế (floor / half-up / ceil).
+
+0 → “切り捨て” (floor – luôn làm tròn xuống)
+1 → “四捨五入” (round half up – 0.5 trở lên làm tròn lên)
+2 → “切り上げ” (ceil – luôn làm tròn lên)
+
+1. taxRateType: 0 | 1 | 2 – loại thuế suất (税率区分)
+
+Ý nghĩa business: phân loại loại thuế mà bạn đang định nghĩa rate cho.
+Ví dụ thường gặp (tùy taxCategoryArr của bạn):
+0 → “標準税率” (thuế suất chuẩn 10%)
+1 → “軽減税率” (thuế suất giảm 8%)
+2 → “非課税 / 不課税 / 免税” (không tính thuế)
+Trên UI:
+FE hiển thị: taxCategoryArr[row.taxRateType].
+Trên BE:
+Lưu dưới dạng int.
+Validate: chỉ cho phép 0, 1, 2; nếu về sau thêm loại, bạn sẽ thêm phần tử mới vào taxCategoryArr + cho phép thêm code
+
+taxationUnit: 0 | 1 | 2 – đơn vị tính thuế (課税単位)
+
+Ý nghĩa business: áp dụng thuế ở “đơn vị” nào trong hóa đơn.
+Ví dụ thường gặp (tùy taxationUnitArr của bạn):
+0 → “明細単位” (theo dòng chi tiết / từng item)
+1 → “伝票単位” (theo chứng từ / hóa đơn)
+2 → “請求単位” hoặc “合計単位” (theo tổng / lần billing)
+Điều này ảnh hưởng cách bạn tính:
+Per-line: tính thuế cho từng dòng rồi cộng.
+Per-bill: cộng subtotal xong mới nhân thuế và làm tròn.
+FE hiển thị: taxationUnitArr[row.taxationUnit].
+BE: lưu int, validate 0–2
+
+round: 0 | 1 | 2 – cách làm tròn (計算時の丸め)
+
+Ý nghĩa business: rule làm tròn khi tính số tiền thuế.
+Ví dụ điển hình (tùy roundArr của bạn):
+0 → “切り捨て” (floor – luôn làm tròn xuống)
+1 → “四捨五入” (round half up – 0.5 trở lên làm tròn lên)
+2 → “切り上げ” (ceil – luôn làm tròn lên)
+FE hiển thị: roundArr[row.round].
+BE: lưu int, validate 0–2. Nếu sau này bạn implement hàm tính thuế ở BE, bạn sẽ dùng field này để chọn thuật toán làm tròn.
+*/
