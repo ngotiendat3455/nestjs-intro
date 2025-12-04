@@ -22,3 +22,4 @@ export * from './staff-daily-setting.entity';
 export * from './staff-not-possible-time.entity';
 export * from './reservation.entity';
 export * from './reservation-course-setting.entity';
+export * from './menu-classification.entity';

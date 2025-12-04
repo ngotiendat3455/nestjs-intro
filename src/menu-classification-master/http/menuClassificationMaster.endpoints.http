@@ -1,0 +1,27 @@
+### List Menu Classification Master
+GET http://localhost:4200/menuClassificationMaster?companyCode=ACME&keyWord=BODY
+
+### Add new menu classification
+POST http://localhost:4200/menuClassificationMaster/add
+Content-Type: application/json
+
+{
+  "companyCode": "ACME",
+  "dispSort": 1,
+  "groupCode": "BODY",
+  "groupName": "ボディ"
+}
+
+### Edit existing menu classification
+PUT http://localhost:4200/menuClassificationMaster/edit/REPLACE_WITH_CONTRACT_OPTION_GROUP_MST_ID
+Content-Type: application/json
+
+{
+  "dispSort": 2,
+  "groupCode": "BODY",
+  "groupName": "ボディ（改定）"
+}
+
+### Delete multiple menu classifications
+DELETE http://localhost:4200/menuClassificationMaster?contractOptionGroupMstIds=ID1&contractOptionGroupMstIds=ID2
+

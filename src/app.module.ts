@@ -28,6 +28,7 @@ import {
   StaffNotPossibleTime,
   ReservationCourseSetting,
   ReservationCourseSettingOrg,
+  ContractOptionGroupMst,
 } from './entities';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -47,6 +48,7 @@ import { MediaMasterModule } from './media-master/media-master.module';
 import { ReservationModule } from './reservation/reservation.module';
 import { ReservationExistingCustomerCourseModule } from './reservation-existing-customer-course/reservation-existing-customer-course.module';
 import { ReservationNewCustomerCourseModule } from './reservation-new-customer-course/reservation-new-customer-course.module';
+import { MenuClassificationMasterModule } from './menu-classification-master/menu-classification-master.module';
 @Module({
   imports: [
     UsersModule,
@@ -65,6 +67,7 @@ import { ReservationNewCustomerCourseModule } from './reservation-new-customer-c
     ReservationModule,
     ReservationExistingCustomerCourseModule,
     ReservationNewCustomerCourseModule,
+    MenuClassificationMasterModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         type: 'postgres',
@@ -102,6 +105,7 @@ import { ReservationNewCustomerCourseModule } from './reservation-new-customer-c
           StaffNotPossibleTime,
           ReservationCourseSetting,
           ReservationCourseSettingOrg,
+          ContractOptionGroupMst,
         ],
       }),
     })
