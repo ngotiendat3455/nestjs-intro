@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
 import { ReservationService } from './reservation.service';
 
 @Controller('reservations')
@@ -34,6 +34,18 @@ export class ReservationController {
       customerClass,
       keyWord,
       customerBasicDataId,
+    });
+  }
+
+  // Assign / change responsible staff for an existing reservation
+  @Patch('staff')
+  updateStaff(
+    @Body('reservationId') reservationId: string,
+    @Body('responsibleStaffId') responsibleStaffId?: string | null,
+  ) {
+    return this.service.updateReservationStaff({
+      reservationId,
+      responsibleStaffId,
     });
   }
 }

@@ -28,6 +28,15 @@ GET http://localhost:4200/reservations?orgId=9f4f98d7-ffcf-4af4-89b3-1858b26c79d
 # - managementNumber can be generated on FE or BE depending on your needs.
 # - This endpoint automatically finds or creates a ReserveFrame for the given org + date + course group + time range.
 
+### Assign / change responsible staff for a reservation
+PATCH http://localhost:4200/reservations/staff
+Content-Type: application/json
+
+{
+  "reservationId": "a42b6538-9dc4-4406-b5ac-a7b99fe243e7",
+  "responsibleStaffId": "5c80eb03-f5ea-4626-9a58-3864667e2375"
+}
+
 ### Create reservation for NEW customer (temporary)
 POST http://localhost:4200/reservations/new-customer
 Content-Type: application/json

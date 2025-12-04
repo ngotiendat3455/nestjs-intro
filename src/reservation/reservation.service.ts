@@ -69,6 +69,10 @@ export class ReservationService {
     private readonly numberFmt: CustomerNumberFormatService,
   ) { }
 
+  // =========================
+  // Create & list reservation
+  // =========================
+
   async createReservation(body: any) {
     const dto: CreateReservationDto = {
       customerId: this.reqString(body.customerId, 'customerId'),
@@ -176,6 +180,7 @@ export class ReservationService {
     return saved;
   }
 
+  // Simple list for reservation list page
   async listReservations(query: ListQuery) {
     const qb = this.reservationRepo
       .createQueryBuilder('r')
@@ -406,6 +411,52 @@ export class ReservationService {
       reservationId: saved.id,
       createDate: saved.createdAt,
       updateDate: saved.updatedAt,
+    };
+  }
+
+  // =========================
+  // Update helpers
+  // =========================
+
+  /**
+   * Assign / change responsible staff for an existing reservation.
+   * - reservationId: UUID of reservation (reservationInformationId on FE)
+   * - responsibleStaffId: UUID of staff to assign; if null/undefined => clear assignment
+   */
+  async updateReservationStaff(params: {
+    reservationId: string;
+    responsibleStaffId?: string | null;
+  }) {
+    const reservationId = this.reqString(
+      params.reservationId,
+      'reservationId',
+    );
+
+    const reservation = await this.reservationRepo.findOne({
+      where: { id: reservationId },
+      relations: ['responsibleStaff'],
+    });
+    if (!reservation) {
+      throw new NotFoundException('Reservation not found');
+    }
+
+    let staff: Staff | null = null;
+    if (params.responsibleStaffId) {
+      staff = await this.staffRepo.findOne({
+        where: { id: params.responsibleStaffId },
+      });
+      if (!staff) {
+        throw new NotFoundException('Staff not found');
+      }
+    }
+
+    reservation.responsibleStaff = staff ? ({ id: staff.id } as any) : null;
+
+    const saved = await this.reservationRepo.save(reservation);
+
+    return {
+      reservationInformationId: saved.id,
+      responsibleStaffId: staff ? staff.id : null,
     };
   }
 
