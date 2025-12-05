@@ -1,0 +1,14 @@
+### Get cashier store setting for org
+GET http://localhost:3000/cashierStoreSetting/{{orgId}}
+Accept: application/json
+
+### Upsert cashier store setting (create or update)
+POST http://localhost:3000/cashierStoreSetting
+Content-Type: application/json
+
+{
+  "orgId": "{{orgId}}",
+  "receiptPrinterIp": "192.168.0.10",
+  "receiptPrinterPort": "9100"
+}
+

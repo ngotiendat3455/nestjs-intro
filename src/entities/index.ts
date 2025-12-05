@@ -31,3 +31,4 @@ export * from './product-item-org.entity';
 export * from './item-section-config.entity';
 export * from './discount.entity';
 export * from './discount-org.entity';
+export * from './cashier-store-setting.entity';
