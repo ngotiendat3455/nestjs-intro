@@ -1,0 +1,49 @@
+### List discounts
+GET http://localhost:3000/discounts?targetDate=2025-01-01&effiectiveType=ALL
+Accept: application/json
+
+### List discounts for specific org
+GET http://localhost:3000/discounts?orgIds={{orgId}}&targetDate=2025-01-01&effiectiveType=VALID
+Accept: application/json
+
+### Detail discount
+GET http://localhost:3000/discounts/{{discountId}}?targetDate=2025-01-01
+Accept: application/json
+
+### Create discount
+POST http://localhost:4200/discounts
+Content-Type: application/json
+
+{
+  "discountCode": "D001",
+  "discountName": "10%OFF 全品",
+  "discountType": 1,
+  "discountAmount": 0,
+  "discountRate": 10,
+  "usePoint": false,
+  "effective": true,
+  "applyStartDate": "2025-01-01",
+  "origin": "SYSTEM",
+  "media": "POS",
+  "orgIds": ["9f4f98d7-ffcf-4af4-89b3-1858b26c79de"]
+}
+
+### Update discount (upsert with discountId)
+POST http://localhost:3000/discounts
+Content-Type: application/json
+
+{
+  "discountId": "{{discountId}}",
+  "discountCode": "D001",
+  "discountName": "10%OFF 全品 (改定)",
+  "discountType": 1,
+  "discountAmount": 0,
+  "discountRate": 10,
+  "usePoint": false,
+  "effective": true,
+  "applyStartDate": "2025-01-01",
+  "origin": "SYSTEM",
+  "media": "POS",
+  "orgIds": ["{{orgId1}}", "{{orgId3}}"]
+}
+

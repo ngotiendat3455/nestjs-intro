@@ -35,6 +35,8 @@ import {
   ProductDepartment,
   ProductItem,
   ProductItemOrg,
+  Discount,
+  DiscountOrg,
 } from './entities';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -59,6 +61,7 @@ import { MenuMasterModule } from './menu-master/menu-master.module';
 import { TaxRateSettingModule } from './tax-rate-setting/tax-rate-setting.module';
 import { ProductItemModule } from './product-item/product-item.module';
 import { ProductDepartmentModule } from './product-department/product-department.module';
+import { DiscountModule } from './discount/discount.module';
 @Module({
   imports: [
     UsersModule,
@@ -82,6 +85,7 @@ import { ProductDepartmentModule } from './product-department/product-department
     TaxRateSettingModule,
     ProductItemModule,
     ProductDepartmentModule,
+    DiscountModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         type: 'postgres',
@@ -126,6 +130,8 @@ import { ProductDepartmentModule } from './product-department/product-department
           ProductDepartment,
           ProductItem,
           ProductItemOrg,
+          Discount,
+          DiscountOrg,
         ],
       }),
     })

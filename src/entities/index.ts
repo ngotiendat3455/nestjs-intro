@@ -29,3 +29,5 @@ export * from './product-department.entity';
 export * from './product-item.entity';
 export * from './product-item-org.entity';
 export * from './item-section-config.entity';
+export * from './discount.entity';
+export * from './discount-org.entity';
