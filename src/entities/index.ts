@@ -25,3 +25,7 @@ export * from './staff-not-possible-time.entity';
 export * from './reservation.entity';
 export * from './reservation-course-setting.entity';
 export * from './menu-classification.entity';
+export * from './product-department.entity';
+export * from './product-item.entity';
+export * from './product-item-org.entity';
+export * from './item-section-config.entity';

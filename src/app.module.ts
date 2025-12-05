@@ -31,6 +31,10 @@ import {
   ContractOptionGroupMst,
   ContractMenuMst,
   TaxRate,
+  ItemSectionConfig,
+  ProductDepartment,
+  ProductItem,
+  ProductItemOrg,
 } from './entities';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -53,6 +57,8 @@ import { ReservationNewCustomerCourseModule } from './reservation-new-customer-c
 import { MenuClassificationMasterModule } from './menu-classification-master/menu-classification-master.module';
 import { MenuMasterModule } from './menu-master/menu-master.module';
 import { TaxRateSettingModule } from './tax-rate-setting/tax-rate-setting.module';
+import { ProductItemModule } from './product-item/product-item.module';
+import { ProductDepartmentModule } from './product-department/product-department.module';
 @Module({
   imports: [
     UsersModule,
@@ -74,6 +80,8 @@ import { TaxRateSettingModule } from './tax-rate-setting/tax-rate-setting.module
     MenuClassificationMasterModule,
     MenuMasterModule,
     TaxRateSettingModule,
+    ProductItemModule,
+    ProductDepartmentModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         type: 'postgres',
@@ -114,6 +122,10 @@ import { TaxRateSettingModule } from './tax-rate-setting/tax-rate-setting.module
           ContractOptionGroupMst,
           ContractMenuMst,
           TaxRate,
+          ItemSectionConfig,
+          ProductDepartment,
+          ProductItem,
+          ProductItemOrg,
         ],
       }),
     })

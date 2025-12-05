@@ -1,0 +1,54 @@
+### List product departments
+GET http://localhost:4200/productDepartments?keyWord=&effective=VALID
+Accept: application/json
+
+### Detail (configured / unconfigured items)
+GET http://localhost:4200/productDepartments/7d9e1d17-56db-43aa-84f4-a3c1cac82c79
+Accept: application/json
+
+### Create department
+POST http://localhost:4200/productDepartments
+Content-Type: application/json
+
+{
+  "displaySort": 10,
+  "itemSectionCode": "A01",
+  "itemSectionName": "フード do an",
+  "taxRateType": 0,
+  "effective": true,
+  "createdItemSectionConfigRequests": [
+    {
+      "dispSort": 1,
+      "itemID": "85901d20-d666-48ad-bacb-b12ebf037597",
+      "itemOrgID": "9f4f98d7-ffcf-4af4-89b3-1858b26c79de"
+    },
+    {
+      "dispSort": 2,
+      "itemID": "ef663c20-f51a-4b9e-940f-e4d7093b3a9b",
+      "itemOrgID": "9f4f98d7-ffcf-4af4-89b3-1858b26c79de"
+    }
+  ]
+}
+
+### Update department
+PUT http://localhost:3000/productDepartments/{{itemSectionId}}
+Content-Type: application/json
+
+{
+  "itemSectionName": "フード（更新）",
+  "effective": true,
+  "createdItemSectionConfigRequests": [
+    {
+      "dispSort": 0,
+      "itemID": "{{itemID2}}",
+      "itemOrgID": "{{orgID1}}"
+    }
+  ],
+  "deletedItemSectionConfigRequests": [
+    {
+      "itemID": "{{itemID1}}",
+      "itemOrgID": "{{orgID1}}"
+    }
+  ]
+}
+

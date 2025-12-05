@@ -1,0 +1,38 @@
+### List product items
+GET http://localhost:4200/productItems?targetDate=2025-01-01
+Accept: application/json
+
+### Detail
+GET http://localhost:3000/productItems/{{itemID}}?applyStartDate=2025-01-01
+Accept: application/json
+
+### Create
+POST http://localhost:4200/productItems
+Content-Type: application/json
+
+{
+  "itemCode": "1002",
+  "itemName": "com rang",
+  "itemSectionID": null,
+  "cost": 300,
+  "unitPrice": 700,
+  "taxationSection": false,
+  "applyStartDate": "2025-01-01T00:00:00+09:00",
+  "supplierMstId": null,
+  "orgIDs": ["9f4f98d7-ffcf-4af4-89b3-1858b26c79de"]
+}
+
+### Update
+PUT http://localhost:3000/productItems/{{itemID}}
+Content-Type: application/json
+
+{
+  "itemName": "カレーライス（更新）",
+  "unitPrice": 750,
+  "orgIDs": ["{{orgID1}}", "{{orgID2}}"]
+}
+
+### Delete
+DELETE http://localhost:3000/productItems?itemID={{itemID1}}&itemID={{itemID2}}
+Accept: application/json
+
