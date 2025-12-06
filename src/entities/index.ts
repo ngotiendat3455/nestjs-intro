@@ -37,3 +37,4 @@ export * from './card-company.entity';
 export * from './card-company-org.entity';
 export * from './payment-method.entity';
 export * from './payment-method-org.entity';
+export * from './point.entity';

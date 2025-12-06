@@ -1,0 +1,22 @@
+### List points
+GET http://localhost:3000/points
+Accept: application/json
+
+### Create point
+POST http://localhost:3000/points
+Content-Type: application/json
+
+{
+  "dispOrder": 1,
+  "pointName": "Tポイント",
+  "changeRate": 1.5
+}
+
+### Toggle deleted / active flag
+PATCH http://localhost:3000/points/{{pointMstID}}
+Content-Type: application/json
+
+{
+  "deleted": true
+}
+
