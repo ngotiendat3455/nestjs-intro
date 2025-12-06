@@ -32,3 +32,6 @@ export * from './item-section-config.entity';
 export * from './discount.entity';
 export * from './discount-org.entity';
 export * from './cashier-store-setting.entity';
+export * from './accounting-slip.entity';
+export * from './card-company.entity';
+export * from './card-company-org.entity';
