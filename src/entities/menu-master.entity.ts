@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
   VersionColumn,
 } from 'typeorm';
-import { ContractOptionGroupMst, CourseGroup } from './index';
+import { ContractOptionGroupMst } from './index';
 
 /**
  * Menu master (contract_menu_mst)
@@ -41,16 +41,6 @@ export class ContractMenuMst {
   })
   menuClassification: ContractOptionGroupMst;
 
-  @ManyToOne(() => CourseGroup, {
-    nullable: true,
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({
-    name: 'contractCourseGroupMstId',
-    referencedColumnName: 'id',
-  })
-  courseGroup?: CourseGroup | null;
-
   @Column({ type: 'int' })
   unitPrice: number;
 
@@ -69,4 +59,3 @@ export class ContractMenuMst {
   @VersionColumn()
   version: number;
 }
-

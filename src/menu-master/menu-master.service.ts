@@ -9,7 +9,6 @@ import { Repository } from 'typeorm';
 import {
   ContractMenuMst,
   ContractOptionGroupMst,
-  CourseGroup,
 } from '../entities';
 
 interface ListQuery {
@@ -24,8 +23,6 @@ export class MenuMasterService {
     private readonly repo: Repository<ContractMenuMst>,
     @InjectRepository(ContractOptionGroupMst)
     private readonly classRepo: Repository<ContractOptionGroupMst>,
-    @InjectRepository(CourseGroup)
-    private readonly courseGroupRepo: Repository<CourseGroup>,
   ) { }
 
   /**
@@ -37,8 +34,7 @@ export class MenuMasterService {
   async list(query: ListQuery) {
     const qb = this.repo
       .createQueryBuilder('m')
-      .leftJoinAndSelect('m.menuClassification', 'mc')
-      .leftJoinAndSelect('m.courseGroup', 'cg');
+      .leftJoinAndSelect('m.menuClassification', 'mc');
 
     if (query.keyWord) {
       const s = `%${query.keyWord}%`;
@@ -75,9 +71,8 @@ export class MenuMasterService {
           ?.contractOptionGroupMstId || '',
         contractOptionGroupName: (m.menuClassification as any)
           ?.groupName || '',
-        contractCourseGroupMstId: (m.courseGroup as any)?.id || '',
-        contractCourseGroupName: (m.courseGroup as any)
-          ?.courseGroupName || '',
+        contractCourseGroupMstId: '',
+        contractCourseGroupName: '',
         applyStartDate: applyStart,
         unitPrice: m.unitPrice,
       };
@@ -125,20 +120,6 @@ export class MenuMasterService {
       throw new NotFoundException('Menu classification not found');
     }
 
-    let courseGroup: CourseGroup | null = null;
-    if (
-      body.contractCourseGroupMstId !== undefined &&
-      body.contractCourseGroupMstId !== null &&
-      String(body.contractCourseGroupMstId).trim() !== ''
-    ) {
-      courseGroup = await this.courseGroupRepo.findOne({
-        where: { id: String(body.contractCourseGroupMstId) },
-      });
-      if (!courseGroup) {
-        throw new NotFoundException('Course group not found');
-      }
-    }
-
     // Ensure unique menuCode (simple rule; adjust if versioning needed)
     const dup = await this.repo.findOne({
       where: { menuCode },
@@ -155,7 +136,6 @@ export class MenuMasterService {
       applyStartDate: applyStartDate as any,
       applyEndDate: applyEndDate as any,
       menuClassification: optionGroup as any,
-      courseGroup: courseGroup ? (courseGroup as any) : null,
     });
 
     const saved = await this.repo.save(entity);
@@ -167,7 +147,7 @@ export class MenuMasterService {
 
     const rec = await this.repo.findOne({
       where: { contractMenuMstID: menuId },
-      relations: ['menuClassification', 'courseGroup'],
+      relations: ['menuClassification'],
     });
     if (!rec) {
       throw new NotFoundException('Menu not found');
@@ -248,23 +228,6 @@ export class MenuMasterService {
       (rec as any).menuClassification = optionGroup as any;
     }
 
-    if (body.contractCourseGroupMstId !== undefined) {
-      if (
-        body.contractCourseGroupMstId === null ||
-        String(body.contractCourseGroupMstId).trim() === ''
-      ) {
-        (rec as any).courseGroup = null;
-      } else {
-        const courseGroup = await this.courseGroupRepo.findOne({
-          where: { id: String(body.contractCourseGroupMstId) },
-        });
-        if (!courseGroup) {
-          throw new NotFoundException('Course group not found');
-        }
-        (rec as any).courseGroup = courseGroup as any;
-      }
-    }
-
     const saved = await this.repo.save(rec);
     return saved;
   }
@@ -337,4 +300,3 @@ export class MenuMasterService {
     return `${y}-${m}-${dd}`;
   }
 }
-

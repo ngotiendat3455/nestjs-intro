@@ -10,6 +10,7 @@ export * from './executive.entity';
 export * from './customer-number-format.entity';
 export * from './customer-reverberation.entity';
 export * from './contract-course.entity';
+export * from './contract-menu.entity';
 export * from './course-group.entity';
 export * from './course-category.entity';
 export * from './reservation-store-setting.entity';

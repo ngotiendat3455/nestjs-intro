@@ -5,12 +5,14 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   VersionColumn,
 } from 'typeorm';
 import { CourseGroup } from './course-group.entity';
 import { CourseCategory } from './course-category.entity';
+import { ContractMenu } from './contract-menu.entity';
 
 export enum ContractCourseStatus {
   ACTIVE = 'ACTIVE',
@@ -44,6 +46,9 @@ export class ContractCourse {
 
   @Column({ type: 'text', nullable: true })
   description?: string | null;
+
+  @OneToMany(() => ContractMenu, (contractMenu) => contractMenu.contractCourse)
+  contractMenus: ContractMenu[];
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
