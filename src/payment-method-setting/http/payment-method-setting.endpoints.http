@@ -1,0 +1,63 @@
+### List payment methods (all, by applyDate)
+GET http://localhost:3000/paymentMethods?applyDate=2025-01-01
+Accept: application/json
+
+### List payment methods for specific org (include children)
+GET http://localhost:3000/paymentMethods?orgIds={{orgId}}&applyForUnderOrg=true&applyDate=2025-01-01
+Accept: application/json
+
+### Create payment method
+POST http://localhost:3000/paymentMethods
+Content-Type: application/json
+
+{
+  "paymentCode": "001",
+  "paymentName": "現金",
+  "accounting": 0,
+  "hanging": 0,
+  "processNumber": 0,
+  "moneyScheduleReceipt": 0,
+  "creditCard": 0,
+  "frequency": 0,
+  "applyStartDate": "2025-01-01",
+  "companyCode": "COMPANY01",
+  "orgIds": ["{{orgId}}"]
+}
+
+### Update payment method (upsert with paymentId)
+POST http://localhost:3000/paymentMethods
+Content-Type: application/json
+
+{
+  "paymentId": "{{paymentId}}",
+  "paymentCode": "001",
+  "paymentName": "現金（更新）",
+  "accounting": 0,
+  "hanging": 0,
+  "processNumber": 1,
+  "moneyScheduleReceipt": 0,
+  "creditCard": 1,
+  "frequency": 0,
+  "applyStartDate": "2025-01-01",
+  "companyCode": "COMPANY01",
+  "orgIds": ["{{orgId1}}", "{{orgId2}}"],
+  "deleted": false
+}
+
+### Delete payment method for org(s)
+DELETE http://localhost:3000/paymentMethods
+Content-Type: application/json
+
+[
+  {
+    "paymentId": "{{paymentId}}",
+    "orgId": "{{orgId1}}",
+    "applyStartDate": "2025-01-01"
+  },
+  {
+    "paymentId": "{{paymentId}}",
+    "orgId": "{{orgId2}}",
+    "applyStartDate": "2025-01-01"
+  }
+]
+

@@ -35,3 +35,5 @@ export * from './cashier-store-setting.entity';
 export * from './accounting-slip.entity';
 export * from './card-company.entity';
 export * from './card-company-org.entity';
+export * from './payment-method.entity';
+export * from './payment-method-org.entity';
