@@ -30,6 +30,7 @@ import {
   ReservationCourseSettingOrg,
   ContractOptionGroupMst,
   ContractMenuMst,
+  ContractMenu,
   TaxRate,
   ItemSectionConfig,
   ProductDepartment,
@@ -38,6 +39,17 @@ import {
   Discount,
   DiscountOrg,
   CashierStoreSetting,
+  AccountingSlip,
+  AccountingDetail,
+  AccountingDetailContract,
+  AccountingDetailOption,
+  AccountingDetailItem,
+  AccountingPayment,
+  CardCompany,
+  CardCompanyOrg,
+  PaymentMethod,
+  PaymentMethodOrg,
+  Point,
 } from './entities';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -64,6 +76,10 @@ import { ProductItemModule } from './product-item/product-item.module';
 import { ProductDepartmentModule } from './product-department/product-department.module';
 import { DiscountModule } from './discount/discount.module';
 import { CashierStoreSettingModule } from './cashier-store-setting/cashier-store-setting.module';
+import { AccountingSlipModule } from './accounting-slip/accounting-slip.module';
+import { CardCompanySettingModule } from './card-company-setting/card-company-setting.module';
+import { PaymentMethodSettingModule } from './payment-method-setting/payment-method-setting.module';
+import { PointSettingModule } from './point-setting/point-setting.module';
 @Module({
   imports: [
     UsersModule,
@@ -89,6 +105,10 @@ import { CashierStoreSettingModule } from './cashier-store-setting/cashier-store
     ProductDepartmentModule,
     DiscountModule,
     CashierStoreSettingModule,
+    AccountingSlipModule,
+    CardCompanySettingModule,
+    PaymentMethodSettingModule,
+    PointSettingModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         type: 'postgres',
@@ -128,6 +148,7 @@ import { CashierStoreSettingModule } from './cashier-store-setting/cashier-store
           ReservationCourseSettingOrg,
           ContractOptionGroupMst,
           ContractMenuMst,
+          ContractMenu,
           TaxRate,
           ItemSectionConfig,
           ProductDepartment,
@@ -136,6 +157,17 @@ import { CashierStoreSettingModule } from './cashier-store-setting/cashier-store
           Discount,
           DiscountOrg,
           CashierStoreSetting,
+          AccountingSlip,
+          AccountingDetail,
+          AccountingDetailContract,
+          AccountingDetailOption,
+          AccountingDetailItem,
+          AccountingPayment,
+          CardCompany,
+          CardCompanyOrg,
+          PaymentMethod,
+          PaymentMethodOrg,
+          Point,
         ],
       }),
     })

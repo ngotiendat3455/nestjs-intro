@@ -1,0 +1,87 @@
+### Create accounting slip (POS cashier save)
+POST http://localhost:3000/v1/accountingSlips
+Content-Type: application/json
+
+{
+  "orgId": "{{orgId}}",
+  "companyCode": "COMPANY01",
+  "slipType": "SAVED",
+  "businessDay": "2025-01-01",
+  "accountingDatetime": "2025-01-01T10:00:00+09:00",
+  "accountingStaffID": "{{staffId}}",
+  "customerBasicDataId": "{{customerId}}",
+  "customerName": "Customer A",
+  "accountingStaffName": "Staff A",
+  "includingTaxTotalAmount": 11000,
+  "taxationTargetAmount": 10000,
+  "exemptionTargetAmount": 0,
+  "taxAmount": 1000,
+  "paymentAmount": 11000,
+  "disbursementAmount": 0,
+  "accountingDetailContractUsingNewContractCourseRequests": [],
+  "accountingDetailContractUsingOldContractCourseRequests": [],
+  "accountingDetailItemRequests": [],
+  "accountingDetailOptionRequests": [],
+  "accountingPaymentRequests": [
+    {
+      "paymentID": "{{paymentIdCash}}",
+      "paymentName": "‡?_‚Ř`",
+      "paymentAmount": 11000,
+      "accounting": 0
+    }
+  ]
+}
+
+### Update accounting slip
+PUT http://localhost:3000/v1/accountingSlips/{{accountingSlipID}}
+Content-Type: application/json
+
+{
+  "slipType": "SAVED",
+  "businessDay": "2025-01-01",
+  "accountingDatetime": "2025-01-01T11:00:00+09:00",
+  "includingTaxTotalAmount": 12000,
+  "paymentAmount": 12000
+}
+
+### Update accounting slip history
+PUT http://localhost:3000/v1/accountingSlips/history/{{accountingSlipID}}
+Content-Type: application/json
+
+{
+  "slipType": "SAVED",
+  "businessDay": "2025-01-01",
+  "accountingDatetime": "2025-01-01T11:30:00+09:00",
+  "includingTaxTotalAmount": 11500,
+  "paymentAmount": 11500
+}
+
+### Get accounting slip detail
+GET http://localhost:3000/v1/accountingSlips/{{accountingSlipID}}
+Accept: application/json
+
+### Get accounting slip detail for printing
+GET http://localhost:3000/v1/accountingSlips/{{accountingSlipID}}/printing
+Accept: application/json
+
+### Delete accounting slip
+DELETE http://localhost:3000/v1/accountingSlips/{{accountingSlipID}}
+Accept: application/json
+
+### Mark slip as RETURN
+POST http://localhost:3000/v1/accountingSlips/{{accountingSlipID}}/return
+Content-Type: application/json
+
+{
+  "reason": "Customer refund",
+  "disbursementAmount": 11000
+}
+
+### Daily slip statistic
+GET http://localhost:3000/v1/accountingSlips/dailySlipStatistic?companyCode=COMPANY01&businessDay=2025-01-01&orgID={{orgId}}
+Accept: application/json
+
+### Daily detail statistic
+GET http://localhost:3000/v1/accountingSlips/dailyDetailStatistic?companyCode=COMPANY01&businessDay=2025-01-01&orgID={{orgId}}
+Accept: application/json
+
