@@ -56,6 +56,7 @@ export class AuthController {
       .leftJoinAndSelect('s.revenueRole', 'revenueRole')
       .leftJoinAndSelect('s.inventoryRole', 'inventoryRole')
       .leftJoinAndSelect('s.magazineRole', 'magazineRole')
+      .leftJoinAndSelect('s.saleRole', 'saleRole')
       .where('s.companyCode = :companyCode AND s.staffId = :staffId', { companyCode, staffId })
       .andWhere('s.applyStartDate <= :today AND (s.applyEndDate IS NULL OR :today < s.applyEndDate)', { today: todayStr })
       .orderBy('s.applyStartDate', 'DESC')
@@ -71,7 +72,7 @@ export class AuthController {
       staffMei: staff.staffMei,
       orgId: (staff as any).org?.id || null,
       orgName: staff.orgName || ((staff as any).org?.orgName ?? null),
-      roles: [], // populate from role details if needed
+      roles: this.buildRolesPayload(staff),
       staffOrganizationData: (staff as any).staffOrganizationData ?? [],
       authorityLevel: staff.authorityLevel,
       administratorFlag: staff.administratorFlag,
@@ -91,5 +92,46 @@ export class AuthController {
 
     return detail;
   }
-}
 
+  // Build roles array with moduleKey + scopes for each linked role relation.
+  private buildRolesPayload(staff: any) {
+    const map = [
+      { moduleKey: 'basicMaster', rel: 'masterRole' },
+      { moduleKey: 'customerManagement', rel: 'customerRole' },
+      { moduleKey: 'reservationManagement', rel: 'reservationRole' },
+      { moduleKey: 'commonManagement', rel: 'commonRole' },
+      { moduleKey: 'cashierManagement', rel: 'registerRole' },
+      { moduleKey: 'contractManagement', rel: 'contractRole' },
+      { moduleKey: 'revenueManagement', rel: 'revenueRole' },
+      { moduleKey: 'inventoryManagement', rel: 'inventoryRole' },
+      { moduleKey: 'mailManagement', rel: 'magazineRole' },
+      // If saleRole is used elsewhere, map it to customerManagement as default
+      { moduleKey: 'customerManagement', rel: 'saleRole' },
+    ];
+
+    const roles: any[] = [];
+    for (const link of map) {
+      const role = (staff as any)[link.rel];
+      if (!role) continue;
+      roles.push(this.toRoleModulePermission(link.moduleKey, role));
+    }
+    return roles;
+  }
+
+  private toRoleModulePermission(moduleKey: string, role: any) {
+    const perms = (role as any).permissions || {};
+    const mod = perms[moduleKey] || {};
+    const updatedAt = mod.updatedAt || (role.updatedAt as any)?.toISOString?.() || new Date().toISOString();
+    return {
+      moduleKey,
+      roleId: role.id,
+      roleCode: role.roleCode,
+      roleName: role.roleName,
+      authorityLevel: role.authorityLevel,
+      scopes: mod.scopes || [],
+      config: mod.config ?? undefined,
+      permissionVersion: mod.version ?? 0,
+      permissionUpdatedAt: updatedAt,
+    };
+  }
+}
