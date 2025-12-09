@@ -8,6 +8,7 @@ import {
   CustomerContact,
   CustomerContract,
   CustomerReverberation,
+  ContractCourse,
 } from '../entities';
 import { CustomerNumberFormatModule } from '../customer-number-format/customer-number-format.module';
 
@@ -19,6 +20,7 @@ import { CustomerNumberFormatModule } from '../customer-number-format/customer-n
       CustomerAddress,
       CustomerContract,
       CustomerReverberation,
+      ContractCourse,
     ]),
     CustomerNumberFormatModule,
   ],

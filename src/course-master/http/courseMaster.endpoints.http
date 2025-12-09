@@ -5,13 +5,21 @@ GET http://localhost:4200/courseMaster?page=1&pageSize=20&status=ACTIVE&search=b
 POST http://localhost:4200/courseMaster/add
 Content-Type: application/json
 {
-  "courseCode": "NBO90",
-  "courseName": "[New] 90-Minute Body Experience",
-  "status": "ACTIVE",
-  "description": "90-Minute Body Experience Course for New Customers",
+  "courseCode": "FACIAL-90",
+  "courseName": "Facial 90 phút",
   "contractCourseGroupId": "9b280e4f-67e0-4204-a8f4-82d6fd55c2d2",
-  "contractCourseCategoryId": "07dbd43a-859a-4f0d-9976-3c7cf5484fe3"
+  "contractCourseCategoryId": "07dbd43a-859a-4f0d-9976-3c7cf5484fe3",
+  "status": "ACTIVE",
+  "description": "Khoá chăm sóc da 90 phút"
 }
+// {
+//   "courseCode": "NBO90",
+//   "courseName": "[New] 90-Minute Body Experience",
+//   "status": "ACTIVE",
+//   "description": "90-Minute Body Experience Course for New Customers",
+//   "contractCourseGroupId": "9b280e4f-67e0-4204-a8f4-82d6fd55c2d2",
+//   "contractCourseCategoryId": "07dbd43a-859a-4f0d-9976-3c7cf5484fe3"
+// }
 // {
 //   "courseCode": "NFA60",
 //   "courseName": "[New] 60-Minute Facial Experience",

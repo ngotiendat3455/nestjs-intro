@@ -7,6 +7,7 @@ import {
   AccountingDetailOption,
   AccountingDetailItem,
   AccountingPayment,
+  CustomerContract,
 } from '../entities';
 import { AccountingSlipService } from './accounting-slip.service';
 import { AccountingSlipController } from './accounting-slip.controller';
@@ -20,6 +21,7 @@ import { AccountingSlipController } from './accounting-slip.controller';
       AccountingDetailOption,
       AccountingDetailItem,
       AccountingPayment,
+      CustomerContract,
     ]),
   ],
   controllers: [AccountingSlipController],

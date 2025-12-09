@@ -71,19 +71,55 @@ Content-Type: application/json
 ### Contracts
 GET http://localhost:3000/customer/CUS-001/contracts?status=ACTIVE
 
-POST http://localhost:3000/customer/CUS-001/contracts/add
-Content-Type: application/json
+### Get one contract
+GET http://localhost:3000/customer/CUS-001/contracts/CTR-001
 
+POST http://localhost:4200/customer/143135b5-3b7f-4697-b146-7c2d55c52a6b/contracts/add
+Content-Type: application/json
 {
-  "startDate": "2025-01-01",
-  "status": "ACTIVE"
+  "contractNo": "CTR-2025-001",
+  "contractCourseMstId": "7ed2c51a-ca4c-4aa2-847e-e033622dd5a9",
+  "startDate": "2025-12-01",
+  "endDate": "2026-12-31",
+  "totalNum": 10,
+  "usedNum": 0,
+  "totalPrice": 120000,
+  "discountRate": 10,
+  "discountPrice": 10800,
+  "adjustPrice": 0,
+  "expirationDate": "2026-12-31",
+  "extensionDate": "2027-01-31",
+  "status": "ACTIVE",
+  "autoRenew": false,
+  "note": "Gói facial 10 buổi"
 }
+// {
+//   "startDate": "2025-01-01",
+//   "contractNo": "CTR-001",
+//   "contractCourseMstId": "REPLACE_WITH_CONTRACT_COURSE_ID",
+//   "totalNum": 10,
+//   "usedNum": 0,
+//   "totalPrice": 120000,
+//   "discountRate": 10,
+//   "discountPrice": 10800,
+//   "adjustPrice": 0,
+//   "expirationDate": "2025-12-31",
+//   "extensionDate": "2026-01-31",
+//   "status": "ACTIVE"
+// }
 
 PUT http://localhost:3000/customer/CUS-001/contracts/edit/CTR-001
 Content-Type: application/json
 
 {
   "endDate": "2026-12-31",
+  "totalNum": 12,
+  "usedNum": 2,
+  "totalPrice": 144000,
+  "discountRate": 8,
+  "discountPrice": 10800,
+  "adjustPrice": 2000,
+  "expirationDate": "2026-12-31",
+  "extensionDate": "2027-01-15",
   "ifMatchVersion": 1
 }
-

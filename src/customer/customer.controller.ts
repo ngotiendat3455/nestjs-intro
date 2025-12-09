@@ -88,6 +88,13 @@ export class CustomerController {
   ) {
     return this.service.listContracts(id, status, effectiveAt);
   }
+  @Get(':id/contracts/:contractId')
+  getContract(
+    @Param('id') id: string,
+    @Param('contractId') contractId: string,
+  ) {
+    return this.service.getContractDetail(id, contractId);
+  }
   @Post(':id/contracts/add')
   addContract(@Param('id') id: string, @Body() body: any) {
     return this.service.addContract(id, body);

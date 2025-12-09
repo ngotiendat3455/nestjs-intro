@@ -18,8 +18,20 @@ Content-Type: application/json
   "taxAmount": 1000,
   "paymentAmount": 11000,
   "disbursementAmount": 0,
-  "accountingDetailContractUsingNewContractCourseRequests": [],
-  "accountingDetailContractUsingOldContractCourseRequests": [],
+  // Preferred unified array for contract-course usage; legacy arrays still supported.
+  "accountingDetailContractRequests": [
+    {
+      "contractId": "{{contractId}}",
+      "contractName": "Facial 90 (contract)",
+      "contractCourseGroupMstId": "{{groupId}}",
+      "contractCourseGroupName": "FA 90",
+      "ticketUsedNum": 1,
+      "totalPrice": 10800,
+      "taxAmount": 800,
+      "staffId": "{{staffId}}",
+      "staffName": "Staff A"
+    }
+  ],
   "accountingDetailItemRequests": [],
   "accountingDetailOptionRequests": [],
   "accountingPaymentRequests": [
@@ -84,4 +96,3 @@ Accept: application/json
 ### Daily detail statistic
 GET http://localhost:3000/v1/accountingSlips/dailyDetailStatistic?companyCode=COMPANY01&businessDay=2025-01-01&orgID={{orgId}}
 Accept: application/json
-

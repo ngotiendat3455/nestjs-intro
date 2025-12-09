@@ -1,10 +1,11 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AccountingSlip } from '../entities';
+import { AccountingSlip, AccountingDetailContract, CustomerContract } from '../entities';
 
 interface UpsertAccountingSlipBody {
   // These follow the shape built by formatDataToSave on the frontend.
@@ -34,6 +35,10 @@ export class AccountingSlipService {
   constructor(
     @InjectRepository(AccountingSlip)
     private readonly repo: Repository<AccountingSlip>,
+    @InjectRepository(AccountingDetailContract)
+    private readonly contractDetailRepo: Repository<AccountingDetailContract>,
+    @InjectRepository(CustomerContract)
+    private readonly customerContractRepo: Repository<CustomerContract>,
   ) { }
 
   /**
@@ -43,82 +48,112 @@ export class AccountingSlipService {
    * for later querying (businessDay, slipType, companyCode, ...).
    */
   async create(payload: UpsertAccountingSlipBody) {
-    const now = new Date();
-    const businessDay = this.parseBusinessDay(payload.businessDay) ?? now;
-    const slipType = payload.slipType || 'SAVED';
-    const companyCode = payload.companyCode ?? null;
+    return this.repo.manager.transaction(async (em) => {
+      const now = new Date();
+      const businessDay = this.parseBusinessDay(payload.businessDay) ?? now;
+      const slipType = payload.slipType || 'SAVED';
+      const companyCode = payload.companyCode ?? null;
 
-    const slipNumber = payload.slipNumber && payload.slipNumber.trim().length > 0
-      ? payload.slipNumber.trim()
-      : await this.generateSlipNumber(businessDay);
+      const slipNumber = payload.slipNumber && payload.slipNumber.trim().length > 0
+        ? payload.slipNumber.trim()
+        : await this.generateSlipNumber(businessDay);
 
-    const rec = this.repo.create({
-      slipType,
-      slipNumber,
-      businessDay,
-      accountingDatetime: payload.accountingDatetime
-        ? new Date(payload.accountingDatetime)
-        : now,
-      companyCode,
-      orgName: payload.orgName ?? null,
-      customerName: payload.customerName ?? null,
-      accountingStaffName: payload.accountingStaffName ?? null,
-      includingTaxTotalAmount: Number(payload.includingTaxTotalAmount ?? 0),
-      taxationTargetAmount: Number(payload.taxationTargetAmount ?? 0),
-      exemptionTargetAmount: Number(payload.exemptionTargetAmount ?? 0),
-      taxAmount: Number(payload.taxAmount ?? 0),
-      paymentAmount: Number(payload.paymentAmount ?? 0),
-      disbursementAmount: Number(payload.disbursementAmount ?? 0),
-      payload,
+      const rec = this.repo.create({
+        slipType,
+        slipNumber,
+        businessDay,
+        accountingDatetime: payload.accountingDatetime
+          ? new Date(payload.accountingDatetime)
+          : now,
+        companyCode,
+        orgName: payload.orgName ?? null,
+        customerName: payload.customerName ?? null,
+        accountingStaffName: payload.accountingStaffName ?? null,
+        includingTaxTotalAmount: Number(payload.includingTaxTotalAmount ?? 0),
+        taxationTargetAmount: Number(payload.taxationTargetAmount ?? 0),
+        exemptionTargetAmount: Number(payload.exemptionTargetAmount ?? 0),
+        taxAmount: Number(payload.taxAmount ?? 0),
+        paymentAmount: Number(payload.paymentAmount ?? 0),
+        disbursementAmount: Number(payload.disbursementAmount ?? 0),
+        payload,
+      });
+
+      const saved = await em.getRepository(AccountingSlip).save(rec);
+
+      const contractDetails = this.buildContractDetails(payload, companyCode, saved.accountingSlipID);
+      await this.applyContractUsageDelta(contractDetails, {}, em);
+      if (contractDetails.length) {
+        await em.getRepository(AccountingDetailContract).save(contractDetails);
+      }
+
+      return {
+        accountingSlipID: saved.accountingSlipID,
+        slipNumber: saved.slipNumber,
+      };
     });
-
-    const saved = await this.repo.save(rec);
-
-    return {
-      accountingSlipID: saved.accountingSlipID,
-      slipNumber: saved.slipNumber,
-    };
   }
 
   /**
    * Update existing slip.
    */
   async update(id: string, payload: UpsertAccountingSlipBody) {
-    const rec = await this.findEntity(id);
+    return this.repo.manager.transaction(async (em) => {
+      const rec = await this.findEntity(id);
 
-    const businessDay = this.parseBusinessDay(payload.businessDay) ?? rec.businessDay;
-    const slipType = payload.slipType || rec.slipType;
-    const companyCode = payload.companyCode ?? rec.companyCode ?? null;
+      const businessDay = this.parseBusinessDay(payload.businessDay) ?? rec.businessDay;
+      const slipType = payload.slipType || rec.slipType;
+      const companyCode = payload.companyCode ?? rec.companyCode ?? null;
 
-    rec.slipType = slipType;
-    rec.businessDay = businessDay;
-    rec.accountingDatetime = payload.accountingDatetime
-      ? new Date(payload.accountingDatetime)
-      : rec.accountingDatetime;
-    rec.companyCode = companyCode;
-    rec.orgName = payload.orgName ?? rec.orgName ?? null;
-    rec.customerName = payload.customerName ?? rec.customerName ?? null;
-    rec.accountingStaffName = payload.accountingStaffName ?? rec.accountingStaffName ?? null;
-    rec.includingTaxTotalAmount = Number(payload.includingTaxTotalAmount ?? rec.includingTaxTotalAmount ?? 0);
-    rec.taxationTargetAmount = Number(payload.taxationTargetAmount ?? rec.taxationTargetAmount ?? 0);
-    rec.exemptionTargetAmount = Number(payload.exemptionTargetAmount ?? rec.exemptionTargetAmount ?? 0);
-    rec.taxAmount = Number(payload.taxAmount ?? rec.taxAmount ?? 0);
-    rec.paymentAmount = Number(payload.paymentAmount ?? rec.paymentAmount ?? 0);
-    rec.disbursementAmount = Number(payload.disbursementAmount ?? rec.disbursementAmount ?? 0);
-    rec.payload = payload;
+      rec.slipType = slipType;
+      rec.businessDay = businessDay;
+      rec.accountingDatetime = payload.accountingDatetime
+        ? new Date(payload.accountingDatetime)
+        : rec.accountingDatetime;
+      rec.companyCode = companyCode;
+      rec.orgName = payload.orgName ?? rec.orgName ?? null;
+      rec.customerName = payload.customerName ?? rec.customerName ?? null;
+      rec.accountingStaffName = payload.accountingStaffName ?? rec.accountingStaffName ?? null;
+      rec.includingTaxTotalAmount = Number(payload.includingTaxTotalAmount ?? rec.includingTaxTotalAmount ?? 0);
+      rec.taxationTargetAmount = Number(payload.taxationTargetAmount ?? rec.taxationTargetAmount ?? 0);
+      rec.exemptionTargetAmount = Number(payload.exemptionTargetAmount ?? rec.exemptionTargetAmount ?? 0);
+      rec.taxAmount = Number(payload.taxAmount ?? rec.taxAmount ?? 0);
+      rec.paymentAmount = Number(payload.paymentAmount ?? rec.paymentAmount ?? 0);
+      rec.disbursementAmount = Number(payload.disbursementAmount ?? rec.disbursementAmount ?? 0);
+      rec.payload = payload;
 
-    await this.repo.save(rec);
+      const existingDetails = await em.getRepository(AccountingDetailContract).find({ where: { accountingSlipID: id } });
+      const newDetails = this.buildContractDetails(payload, companyCode, rec.accountingSlipID);
 
-    return {
-      accountingSlipID: rec.accountingSlipID,
-      slipNumber: rec.slipNumber,
-    };
+      await this.applyContractUsageDelta(newDetails, existingDetails, em);
+
+      if (existingDetails.length) {
+        await em.getRepository(AccountingDetailContract).remove(existingDetails);
+      }
+      if (newDetails.length) {
+        await em.getRepository(AccountingDetailContract).save(newDetails);
+      }
+
+      await em.getRepository(AccountingSlip).save(rec);
+
+      return {
+        accountingSlipID: rec.accountingSlipID,
+        slipNumber: rec.slipNumber,
+      };
+    });
   }
 
   async remove(id: string) {
-    const rec = await this.findEntity(id);
-    await this.repo.remove(rec);
-    return { accountingSlipID: id };
+    return this.repo.manager.transaction(async (em) => {
+      const rec = await this.findEntity(id);
+      const existingDetails = await em.getRepository(AccountingDetailContract).find({ where: { accountingSlipID: id } });
+      if (existingDetails.length) {
+        // Revert ticket usage
+        await this.applyContractUsageDelta([], existingDetails, em);
+        await em.getRepository(AccountingDetailContract).remove(existingDetails);
+      }
+      await em.getRepository(AccountingSlip).remove(rec);
+      return { accountingSlipID: id };
+    });
   }
 
   async getDetail(id: string) {
@@ -304,6 +339,81 @@ export class AccountingSlipService {
       throw new NotFoundException('AccountingSlip not found');
     }
     return rec;
+  }
+
+  private buildContractDetails(payload: any, companyCode: string | null, accountingSlipID: string): AccountingDetailContract[] {
+    // Accept legacy split arrays (new/old) and a unified array for simplicity.
+    const requests: any[] = [
+      ...(payload.accountingDetailContractRequests || []),
+      ...(payload.accountingDetailContractUsingNewContractCourseRequests || []),
+      ...(payload.accountingDetailContractUsingOldContractCourseRequests || []),
+    ];
+    return requests.map((req, idx) => {
+      const ticketUsedNum = this.toInt(req.ticketUsedNum ?? req.useTicketNum ?? 0);
+      const totalPrice = this.toMoney(req.totalPrice ?? req.includingTaxTotalAmount ?? 0);
+      return this.contractDetailRepo.create({
+        accountingSlipID,
+        detailNumber: idx + 1,
+        companyCode: companyCode ?? null,
+        contractId: req.contractId ?? req.contractID ?? null,
+        contractName: req.contractName ?? req.courseName ?? null,
+        contractCourseGroupMstId: req.contractCourseGroupMstId ?? req.contractCourseGroupId ?? null,
+        contractCourseGroupName: req.contractCourseGroupName ?? req.courseGroupName ?? null,
+        customerName: req.customerName ?? payload?.customerName ?? null,
+        staffId: req.staffId ?? payload?.accountingStaffID ?? null,
+        staffName: req.staffName ?? payload?.accountingStaffName ?? null,
+        tax: this.toMoney(req.tax ?? req.taxAmount ?? 0),
+        totalPrice,
+        ticketUsedNum,
+      });
+    });
+  }
+
+  /**
+   * Apply delta for contract usage based on new vs old contract details.
+   * newDetails: array of AccountingDetailContract to be saved.
+   * oldDetails: existing details to be replaced (optional).
+   */
+  private async applyContractUsageDelta(
+    newDetails: AccountingDetailContract[],
+    oldDetails: AccountingDetailContract[],
+    em: any,
+  ) {
+    const deltaMap: Record<string, number> = {};
+
+    oldDetails.forEach((d) => {
+      if (!d.contractId) return;
+      deltaMap[d.contractId] = (deltaMap[d.contractId] ?? 0) - this.toInt(d.ticketUsedNum ?? 0);
+    });
+    newDetails.forEach((d) => {
+      if (!d.contractId) return;
+      deltaMap[d.contractId] = (deltaMap[d.contractId] ?? 0) + this.toInt(d.ticketUsedNum ?? 0);
+    });
+
+    for (const [contractId, delta] of Object.entries(deltaMap)) {
+      if (delta === 0) continue;
+      const contract = await em.getRepository(CustomerContract).findOne({ where: { contractId } });
+      if (!contract) throw new BadRequestException(`Contract not found for contractId=${contractId}`);
+      const currentUsed = Number((contract as any).usedNum ?? 0);
+      const totalNum = Number((contract as any).totalNum ?? 0);
+      const nextUsed = currentUsed + delta;
+      if (nextUsed < 0) throw new BadRequestException('Contract usedNum would become negative');
+      if (nextUsed > totalNum) throw new BadRequestException('Contract ticket usage exceeds totalNum');
+      (contract as any).usedNum = nextUsed;
+      await em.getRepository(CustomerContract).save(contract);
+    }
+  }
+
+  private toInt(v: any) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 0;
+    return Math.trunc(n);
+  }
+
+  private toMoney(v: any) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 0;
+    return Number(n.toFixed(2));
   }
 
   private parseBusinessDay(v?: string) {

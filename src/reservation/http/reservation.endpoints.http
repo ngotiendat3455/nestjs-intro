@@ -42,21 +42,32 @@ POST http://localhost:4200/reservations/new-customer
 Content-Type: application/json
 
 {
-  "birthDate": "1990-04-15",
-  "contractCourseId": "15ac6742-01c6-4d6f-b8ce-9f4318315bba",
-  "customerFirstName": "太郎",
-  "customerFirstNameKana": "たろう",
-  "customerLastName": "山田",
-  "customerLastNameKana": "やまだ",
-  "phoneNumber": "09012345678",
-  "desiredTime": "2025-12-05 11:00:00",
-  "frameId": "0",
-  "requests": "初回体験を希望",
   "orgId": "9f4f98d7-ffcf-4af4-89b3-1858b26c79de",
-  "courseGroupId": "9b280e4f-67e0-4204-a8f4-82d6fd55c2d2",
-  "treatmentTime": 60,
+  "contractCourseId": "7ed2c51a-ca4c-4aa2-847e-e033622dd5a9",
+  "courseGroupId": "709cbd91-ca74-4f0b-a7a4-79d87deed3ca",
+  "desiredTime": "2025-12-01 10:00:00",
+  "treatmentTime": 90,
+  "customerLastName": "Nguyen",
+  "customerFirstName": "A",
+  "phoneNumber": "+84901111222",
   "mediaCode": "WEB_AD"
 }
+// {
+//   "birthDate": "1990-04-15",
+//   "contractCourseId": "15ac6742-01c6-4d6f-b8ce-9f4318315bba",
+//   "customerFirstName": "太郎",
+//   "customerFirstNameKana": "たろう",
+//   "customerLastName": "山田",
+//   "customerLastNameKana": "やまだ",
+//   "phoneNumber": "09012345678",
+//   "desiredTime": "2025-12-05 11:00:00",
+//   "frameId": "0",
+//   "requests": "初回体験を希望",
+//   "orgId": "9f4f98d7-ffcf-4af4-89b3-1858b26c79de",
+//   "courseGroupId": "9b280e4f-67e0-4204-a8f4-82d6fd55c2d2",
+//   "treatmentTime": 60,
+//   "mediaCode": "WEB_AD"
+// }
 
 ### Add customer reverberation
 POST http://localhost:4200/customer/a42b6538-9dc4-4406-b5ac-a7b99fe243e7/reverberations

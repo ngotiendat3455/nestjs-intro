@@ -8,6 +8,7 @@ import {
   CustomerContract,
   CustomerReverberation,
   CustomerStatusEnum,
+  ContractCourse,
 } from '../entities';
 import { AddressTypeEnum } from '../entities/customer-address.entity';
 import { ContractStatusEnum } from '../entities/customer-contract.entity';
@@ -42,6 +43,8 @@ export class CustomerService {
     private readonly contractRepo: Repository<CustomerContract>,
     @InjectRepository(CustomerReverberation)
     private readonly reverberationRepo: Repository<CustomerReverberation>,
+    @InjectRepository(ContractCourse)
+    private readonly contractCourseRepo: Repository<ContractCourse>,
     private readonly numberFmt: CustomerNumberFormatService,
   ) {}
 
@@ -90,9 +93,10 @@ export class CustomerService {
     const [contacts, addresses, contracts] = await Promise.all([
       this.contactRepo.find({ where: { customer: { id } as any } }),
       this.addressRepo.find({ where: { customer: { id } as any } }),
-      this.contractRepo.find({ where: { customer: { id } as any } }),
+      this.contractRepo.find({ where: { customer: { id } as any }, relations: ['contractCourse'] }),
     ]);
-    return { ...c, contacts, addresses, contracts } as any;
+    const contractDtos = contracts.map((ct) => this.toContractDto(ct));
+    return { ...c, contacts, addresses, contracts: contractDtos } as any;
   }
 
   async add(body: any) {
@@ -258,10 +262,24 @@ export class CustomerService {
   // Contracts
   async listContracts(customerId: string, status?: ContractStatus, effectiveAt?: string) {
     await this.ensureCustomer(customerId);
-    const qb = this.contractRepo.createQueryBuilder('ct').where('ct."customerId" = :id', { id: customerId });
+    const qb = this.contractRepo
+      .createQueryBuilder('ct')
+      .leftJoinAndSelect('ct.contractCourse', 'cc')
+      .where('ct."customerId" = :id', { id: customerId });
     if (status) qb.andWhere('ct.status = :st', { st: status });
     if (effectiveAt) qb.andWhere('ct."startDate" <= :d AND (:d < ct."endDate" OR ct."endDate" IS NULL)', { d: effectiveAt });
-    return qb.getMany();
+    const rows = await qb.getMany();
+    return rows.map((ct) => this.toContractDto(ct));
+  }
+
+  async getContractDetail(customerId: string, contractId: string) {
+    await this.ensureCustomer(customerId);
+    const contract = await this.contractRepo.findOne({
+      where: { contractId, customer: { id: customerId } as any },
+      relations: ['contractCourse'],
+    });
+    if (!contract) throw new NotFoundException('Contract not found');
+    return this.toContractDto(contract);
   }
 
   async addContract(customerId: string, body: any) {
@@ -272,6 +290,33 @@ export class CustomerService {
     const status: ContractStatusEnum = ['ACTIVE', 'INACTIVE', 'TERMINATED'].includes(body.status)
       ? (body.status as ContractStatusEnum)
       : ContractStatusEnum.ACTIVE;
+
+    const contractNo = body.contractNo ?? body.contractCode ?? null;
+    const courseId = body.contractCourseMstId ?? body.contractCourseId ?? null;
+    let course: ContractCourse | null = null;
+    if (courseId) {
+      course = await this.contractCourseRepo.findOne({ where: { contractCourseId: String(courseId) } });
+      if (!course) throw new NotFoundException('Contract course master not found');
+    }
+
+    const totalNum = this.reqPositiveInt(body.totalNum, 'totalNum');
+    const usedNum = this.reqPositiveInt(body.usedNum ?? 0, 'usedNum', true);
+    if (usedNum > totalNum) throw new BadRequestException('usedNum cannot exceed totalNum');
+    const totalPrice = this.reqMoney(body.totalPrice, 'totalPrice');
+    const discountRate = this.reqDiscountRate(body.discountRate ?? 0);
+    const discountPrice = body.discountPrice !== undefined
+      ? this.reqMoney(body.discountPrice, 'discountPrice')
+      : Number((totalPrice || 0) / Math.max(totalNum, 1));
+    const adjustPrice = body.adjustPrice !== undefined ? this.reqMoney(body.adjustPrice, 'adjustPrice') : 0;
+    const expirationDate = this.reqDate(body.expirationDate ?? body.endDate ?? startDate, 'expirationDate');
+    if (expirationDate && !(this.dateToYMD(startDate) <= this.dateToYMD(expirationDate))) {
+      throw new BadRequestException('expirationDate must be on or after startDate');
+    }
+    const extensionDate = body.extensionDate ? this.reqDate(body.extensionDate, 'extensionDate') : null;
+    if (extensionDate && expirationDate && this.dateToYMD(extensionDate) < this.dateToYMD(expirationDate)) {
+      throw new BadRequestException('extensionDate must be on or after expirationDate');
+    }
+    const cancelId = body.cancelId ?? null;
 
     // Overlap protection
     const existing = await this.contractRepo.find({ where: { customer: { id: customerId } as any } });
@@ -286,21 +331,65 @@ export class CustomerService {
     const entity = this.contractRepo.create({
       customer: { id: customerId } as any,
       contractCode: body.contractCode ?? null,
+      contractNo,
       startDate: startDate as any,
       endDate: (endDate as any) ?? null,
       status,
       autoRenew: Boolean(body.autoRenew),
       note: body.note ?? null,
+      contractCourse: course ? ({ contractCourseId: course.contractCourseId } as any) : null,
+      contractCourseMstId: course?.contractCourseId ?? courseId ?? null,
+      totalNum,
+      usedNum,
+      totalPrice: String(totalPrice),
+      discountRate: String(discountRate),
+      discountPrice: String(discountPrice),
+      adjustPrice: String(adjustPrice),
+      expirationDate: expirationDate as any,
+      extensionDate: (extensionDate as any) ?? null,
+      cancelId,
     });
-    return await this.contractRepo.save(entity);
+    const saved = await this.contractRepo.save(entity);
+    return this.toContractDto({
+      ...saved,
+      contractCourse: course ?? (entity as any).contractCourse ?? null,
+    } as any);
   }
 
   async editContract(customerId: string, contractId: string, body: any) {
     await this.ensureCustomer(customerId);
-    const c = await this.contractRepo.findOne({ where: { contractId, customer: { id: customerId } as any } });
+    const c = await this.contractRepo.findOne({
+      where: { contractId, customer: { id: customerId } as any },
+      relations: ['contractCourse'],
+    });
     if (!c) throw new NotFoundException('Contract not found');
     const ifMatchVersion: number | undefined = body.ifMatchVersion;
     if (typeof ifMatchVersion === 'number' && ifMatchVersion !== c.version) throw new ConflictException('Version mismatch');
+
+    const nextTotalNum = body.totalNum !== undefined ? this.reqPositiveInt(body.totalNum, 'totalNum') : Number((c as any).totalNum || 0);
+    const nextUsedNum = body.usedNum !== undefined ? this.reqPositiveInt(body.usedNum, 'usedNum', true) : Number((c as any).usedNum || 0);
+    if (nextUsedNum > nextTotalNum) throw new BadRequestException('usedNum cannot exceed totalNum');
+    (c as any).totalNum = nextTotalNum;
+    (c as any).usedNum = nextUsedNum;
+
+    if (body.contractCourseMstId !== undefined || body.contractCourseId !== undefined) {
+      const courseId = body.contractCourseMstId ?? body.contractCourseId;
+      if (courseId === null || courseId === '') {
+        (c as any).contractCourse = null;
+        (c as any).contractCourseMstId = null;
+      } else {
+        const course = await this.contractCourseRepo.findOne({ where: { contractCourseId: String(courseId) } });
+        if (!course) throw new NotFoundException('Contract course master not found');
+        (c as any).contractCourse = course as any;
+        (c as any).contractCourseMstId = course.contractCourseId;
+      }
+    }
+
+    if (body.contractNo !== undefined) c.contractNo = body.contractNo ?? null;
+    if (body.totalPrice !== undefined) (c as any).totalPrice = String(this.reqMoney(body.totalPrice, 'totalPrice'));
+    if (body.discountRate !== undefined) (c as any).discountRate = String(this.reqDiscountRate(body.discountRate));
+    if (body.discountPrice !== undefined) (c as any).discountPrice = String(this.reqMoney(body.discountPrice, 'discountPrice'));
+    if (body.adjustPrice !== undefined) (c as any).adjustPrice = String(this.reqMoney(body.adjustPrice, 'adjustPrice'));
 
     if (body.endDate !== undefined) {
       const newEnd = body.endDate ? this.reqDate(body.endDate, 'endDate') : null;
@@ -316,11 +405,33 @@ export class CustomerService {
       }
       c.endDate = (newEnd as any) ?? null;
     }
+
+    if (body.expirationDate !== undefined) {
+      const newExp = body.expirationDate ? this.reqDate(body.expirationDate, 'expirationDate') : null;
+      if (newExp && !(this.dateToYMD(c.startDate) <= newExp)) {
+        throw new BadRequestException('expirationDate must be on or after startDate');
+      }
+      (c as any).expirationDate = newExp as any;
+    }
+
+    const effectiveExpiration = body.expirationDate
+      ? this.reqDate(body.expirationDate, 'expirationDate')
+      : (c as any).expirationDate ?? null;
+    if (body.extensionDate !== undefined) {
+      const newExt = body.extensionDate ? this.reqDate(body.extensionDate, 'extensionDate') : null;
+      if (newExt && effectiveExpiration && this.dateToYMD(newExt) < this.dateToYMD(effectiveExpiration)) {
+        throw new BadRequestException('extensionDate must be on or after expirationDate');
+      }
+      (c as any).extensionDate = newExt as any;
+    }
+
+    if (body.cancelId !== undefined) (c as any).cancelId = body.cancelId ?? null;
     if (['ACTIVE', 'INACTIVE', 'TERMINATED'].includes(body.status)) (c as any).status = body.status;
     if (body.autoRenew !== undefined) c.autoRenew = Boolean(body.autoRenew);
     if (body.note !== undefined) c.note = body.note ?? null;
 
-    return await this.contractRepo.save(c);
+    const saved = await this.contractRepo.save(c);
+    return this.getContractDetail(customerId, saved.contractId);
   }
 
   async addReverberation(customerId: string, body: any) {
@@ -340,6 +451,31 @@ export class CustomerService {
     });
 
     return this.reverberationRepo.save(entity);
+  }
+
+  private toContractDto(ct: CustomerContract) {
+    const totalNum = Number((ct as any).totalNum ?? 0);
+    const usedNum = Number((ct as any).usedNum ?? 0);
+    const discountPrice = Number((ct as any).discountPrice ?? 0);
+    const adjustPrice = Number((ct as any).adjustPrice ?? 0);
+    const totalPrice = Number((ct as any).totalPrice ?? 0);
+    const remainingNum = Math.max(totalNum - usedNum, 0);
+    const usedAmount = usedNum === totalNum ? usedNum * discountPrice + adjustPrice : usedNum * discountPrice;
+    const remainingPrice = totalPrice - usedAmount;
+
+    return {
+      ...ct,
+      totalNum,
+      usedNum,
+      discountPrice,
+      adjustPrice,
+      totalPrice,
+      remainingNum,
+      remainingPrice,
+      usedAmount,
+      contractCourseName: (ct as any).contractCourse?.courseName ?? null,
+      contractCourseCode: (ct as any).contractCourse?.courseCode ?? null,
+    } as any;
   }
 
   // Helpers
@@ -386,6 +522,23 @@ export class CustomerService {
   private reqDate(v: any, field: string) {
     if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) throw new BadRequestException(`field ${field} must be YYYY-MM-DD`);
     return v;
+  }
+  private reqPositiveInt(v: any, field: string, allowZero = false) {
+    const n = Number(v);
+    const ok = Number.isInteger(n) && (allowZero ? n >= 0 : n > 0);
+    if (!ok) throw new BadRequestException(`${field} must be ${allowZero ? '>= 0' : '> 0'} integer`);
+    return n;
+  }
+  private reqMoney(v: any, field: string) {
+    if (v === undefined || v === null || v === '') throw new BadRequestException(`${field} is required`);
+    const n = Number(v);
+    if (!Number.isFinite(n)) throw new BadRequestException(`${field} must be numeric`);
+    return Number(n.toFixed(2));
+  }
+  private reqDiscountRate(v: any) {
+    const n = Number(v);
+    if (!Number.isFinite(n) || n < 0 || n > 100) throw new BadRequestException('discountRate must be between 0 and 100');
+    return Number(n.toFixed(2));
   }
   private optEmail(v: any) {
     if (typeof v !== 'string') throw new BadRequestException('email must be string');
