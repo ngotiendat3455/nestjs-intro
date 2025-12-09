@@ -7,12 +7,12 @@ GET http://localhost:3000/paymentMethods?orgIds={{orgId}}&applyForUnderOrg=true&
 Accept: application/json
 
 ### Create payment method
-POST http://localhost:3000/paymentMethods
+POST http://localhost:4200/paymentMethods
 Content-Type: application/json
 
 {
   "paymentCode": "001",
-  "paymentName": "現金",
+  "paymentName": "現金 Tien mat",
   "accounting": 0,
   "hanging": 0,
   "processNumber": 0,
@@ -20,8 +20,8 @@ Content-Type: application/json
   "creditCard": 0,
   "frequency": 0,
   "applyStartDate": "2025-01-01",
-  "companyCode": "COMPANY01",
-  "orgIds": ["{{orgId}}"]
+  "companyCode": "CP01",
+  "orgIds": ["9f4f98d7-ffcf-4af4-89b3-1858b26c79de"]
 }
 
 ### Update payment method (upsert with paymentId)
