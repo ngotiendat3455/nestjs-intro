@@ -69,10 +69,10 @@ Content-Type: application/json
 }
 
 ### Contracts
-GET http://localhost:3000/customer/CUS-001/contracts?status=ACTIVE
+GET http://localhost:4200/customer/143135b5-3b7f-4697-b146-7c2d55c52a6b/contracts?status=ACTIVE
 
 ### Get one contract
-GET http://localhost:3000/customer/CUS-001/contracts/CTR-001
+GET http://localhost:4200/customer/143135b5-3b7f-4697-b146-7c2d55c52a6b/contracts/CTR-2025-001
 
 POST http://localhost:4200/customer/143135b5-3b7f-4697-b146-7c2d55c52a6b/contracts/add
 Content-Type: application/json

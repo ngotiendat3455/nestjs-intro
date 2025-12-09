@@ -1,48 +1,87 @@
 ### Create accounting slip (POS cashier save)
-POST http://localhost:3000/v1/accountingSlips
+POST http://localhost:4200/v1/accountingSlips
 Content-Type: application/json
 
 {
-  "orgId": "{{orgId}}",
-  "companyCode": "COMPANY01",
+  "orgId": "9f4f98d7-ffcf-4af4-89b3-1858b26c79de",
+  "companyCode": "CP01",
   "slipType": "SAVED",
-  "businessDay": "2025-01-01",
-  "accountingDatetime": "2025-01-01T10:00:00+09:00",
-  "accountingStaffID": "{{staffId}}",
-  "customerBasicDataId": "{{customerId}}",
-  "customerName": "Customer A",
-  "accountingStaffName": "Staff A",
-  "includingTaxTotalAmount": 11000,
+  "businessDay": "2025-12-01",
+  "accountingDatetime": "2025-12-01T10:00:00+09:00",
+  "customerBasicDataId": "143135b5-3b7f-4697-b146-7c2d55c52a6b",
+  "customerName": "Nguyen A",
+  "accountingStaffID": "6bf1554d-d7d6-42a6-ba87-29fe59b58e5f",
+  "accountingStaffName": "Demo Operator",
+  "includingTaxTotalAmount": 10800,
   "taxationTargetAmount": 10000,
-  "exemptionTargetAmount": 0,
-  "taxAmount": 1000,
-  "paymentAmount": 11000,
+  "taxAmount": 800,
+  "paymentAmount": 0,
   "disbursementAmount": 0,
-  // Preferred unified array for contract-course usage; legacy arrays still supported.
   "accountingDetailContractRequests": [
     {
-      "contractId": "{{contractId}}",
-      "contractName": "Facial 90 (contract)",
-      "contractCourseGroupMstId": "{{groupId}}",
-      "contractCourseGroupName": "FA 90",
+      "contractId": "7637df1e-3a81-4e25-bb34-49139c69a12d",
+      "contractName": "Facial 90 phút (gói đã mua)",
+      "contractCourseGroupMstId": "709cbd91-ca74-4f0b-a7a4-79d87deed3ca",
+      "contractCourseGroupName": "FACIAL",
       "ticketUsedNum": 1,
       "totalPrice": 10800,
       "taxAmount": 800,
-      "staffId": "{{staffId}}",
-      "staffName": "Staff A"
+      "staffId": "6bf1554d-d7d6-42a6-ba87-29fe59b58e5f",
+      "staffName": "Demo Operator"
     }
   ],
   "accountingDetailItemRequests": [],
   "accountingDetailOptionRequests": [],
   "accountingPaymentRequests": [
     {
-      "paymentID": "{{paymentIdCash}}",
-      "paymentName": "‡?_‚Ř`",
-      "paymentAmount": 11000,
+      "paymentID": "57475a51-8840-4f7f-b777-ca7ed2f0c612",
+      "paymentName": "Tiền mặt",
+      "paymentAmount": 0,
       "accounting": 0
     }
   ]
 }
+
+// {
+//   "orgId": "{{orgId}}",
+//   "companyCode": "COMPANY01",
+//   "slipType": "SAVED",
+//   "businessDay": "2025-01-01",
+//   "accountingDatetime": "2025-01-01T10:00:00+09:00",
+//   "accountingStaffID": "{{staffId}}",
+//   "customerBasicDataId": "{{customerId}}",
+//   "customerName": "Customer A",
+//   "accountingStaffName": "Staff A",
+//   "includingTaxTotalAmount": 11000,
+//   "taxationTargetAmount": 10000,
+//   "exemptionTargetAmount": 0,
+//   "taxAmount": 1000,
+//   "paymentAmount": 11000,
+//   "disbursementAmount": 0,
+//   "accountingDetailContractRequests": [
+//     {
+//       "contractId": "{{contractId}}",
+//       "contractName": "Facial 90 (contract)",
+//       "contractCourseGroupMstId": "{{groupId}}",
+//       "contractCourseGroupName": "FA 90",
+//       "ticketUsedNum": 1,
+//       "totalPrice": 10800,
+//       "taxAmount": 800,
+//       "staffId": "{{staffId}}",
+//       "staffName": "Staff A"
+//     }
+//   ],
+//   "accountingDetailItemRequests": [],
+//   "accountingDetailOptionRequests": [],
+//   "accountingPaymentRequests": [
+//     {
+//       "paymentID": "{{paymentIdCash}}",
+//       "paymentName": "‡?_‚Ř`",
+//       "paymentAmount": 11000,
+//       "accounting": 0
+//     }
+//   ]
+// }
 
 ### Update accounting slip
 PUT http://localhost:3000/v1/accountingSlips/{{accountingSlipID}}

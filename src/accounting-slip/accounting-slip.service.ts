@@ -1,11 +1,11 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AccountingSlip, AccountingDetailContract, CustomerContract } from '../entities';
+import { AccountingDetailContract, AccountingSlip, CustomerContract } from '../entities';
 
 interface UpsertAccountingSlipBody {
   // These follow the shape built by formatDataToSave on the frontend.
@@ -81,7 +81,7 @@ export class AccountingSlipService {
       const saved = await em.getRepository(AccountingSlip).save(rec);
 
       const contractDetails = this.buildContractDetails(payload, companyCode, saved.accountingSlipID);
-      await this.applyContractUsageDelta(contractDetails, {}, em);
+      await this.applyContractUsageDelta(contractDetails, [], em);
       if (contractDetails.length) {
         await em.getRepository(AccountingDetailContract).save(contractDetails);
       }
