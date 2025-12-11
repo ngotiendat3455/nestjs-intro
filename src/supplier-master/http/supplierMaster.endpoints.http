@@ -1,0 +1,57 @@
+### List suppliers
+GET http://localhost:3000/supplierMaster?page=1&pageSize=20&search=a&status=ACTIVE
+
+### Lookup (dropdown)
+GET http://localhost:3000/supplierMaster/lookup?search=a&limit=10
+
+### Add supplier
+POST http://localhost:4200/supplierMaster/add
+Content-Type: application/json
+
+{
+  "supplierCode": "SUP-001",
+  "supplierName": "Supplier A",
+  "status": "ACTIVE",
+  "email": "info123@gmail.com",
+  "phone": "+0123456789",
+  "paymentTermDays": 30,
+  "tags": ["cosmetic"],
+  "contacts": [{ "name": "Anh A", "phone": "+0123456788", "isPrimary": true }],
+  "addresses": [{ "type": "OFFICE", "city": "HCM", "street": "123 LTK" }]
+}
+
+### Get detail
+GET http://localhost:3000/supplierMaster/<id>
+
+### Edit supplier
+PUT http://localhost:3000/supplierMaster/edit/<id>
+Content-Type: application/json
+
+{
+  "supplierName": "Supplier A updated",
+  "status": "INACTIVE",
+  "ifMatchVersion": 1
+}
+
+### Contacts
+GET http://localhost:3000/supplierMaster/<id>/contacts
+POST http://localhost:3000/supplierMaster/<id>/contacts/add
+Content-Type: application/json
+
+{
+  "name": "New contact",
+  "email": "contact@a.com",
+  "isPrimary": true
+}
+
+### Addresses
+GET http://localhost:3000/supplierMaster/<id>/addresses
+POST http://localhost:3000/supplierMaster/<id>/addresses/add
+Content-Type: application/json
+
+{
+  "type": "BILLING",
+  "city": "HCM",
+  "street": "456 ABC",
+  "isDefault": true
+}

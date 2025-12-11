@@ -45,3 +45,6 @@ export * from './payment-method.entity';
 export * from './payment-method-org.entity';
 export * from './point.entity';
 export * from './accounting-detail.entity';
+export * from './supplier.entity';
+export * from './supplier-contact.entity';
+export * from './supplier-address.entity';

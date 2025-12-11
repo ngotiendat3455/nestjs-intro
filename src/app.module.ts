@@ -50,6 +50,9 @@ import {
   PaymentMethod,
   PaymentMethodOrg,
   Point,
+  Supplier,
+  SupplierAddress,
+  SupplierContact,
 } from './entities';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
@@ -80,6 +83,7 @@ import { AccountingSlipModule } from './accounting-slip/accounting-slip.module';
 import { CardCompanySettingModule } from './card-company-setting/card-company-setting.module';
 import { PaymentMethodSettingModule } from './payment-method-setting/payment-method-setting.module';
 import { PointSettingModule } from './point-setting/point-setting.module';
+import { SupplierMasterModule } from './supplier-master/supplier-master.module';
 @Module({
   imports: [
     UsersModule,
@@ -109,6 +113,7 @@ import { PointSettingModule } from './point-setting/point-setting.module';
     CardCompanySettingModule,
     PaymentMethodSettingModule,
     PointSettingModule,
+    SupplierMasterModule,
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         type: 'postgres',
@@ -168,6 +173,9 @@ import { PointSettingModule } from './point-setting/point-setting.module';
           PaymentMethod,
           PaymentMethodOrg,
           Point,
+          Supplier,
+          SupplierContact,
+          SupplierAddress,
         ],
       }),
     })

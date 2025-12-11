@@ -5,6 +5,7 @@ import {
   ProductDepartment,
   ProductItem,
   ProductItemOrg,
+  Supplier,
 } from '../entities';
 import { ProductItemService } from './product-item.service';
 import { ProductItemController } from './product-item.controller';
@@ -16,10 +17,10 @@ import { ProductItemController } from './product-item.controller';
       ProductItemOrg,
       ProductDepartment,
       Org,
+      Supplier,
     ]),
   ],
   providers: [ProductItemService],
   controllers: [ProductItemController],
 })
 export class ProductItemModule { }
-

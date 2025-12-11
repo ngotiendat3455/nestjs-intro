@@ -11,6 +11,8 @@ import {
   ProductDepartment,
   ProductItem,
   ProductItemOrg,
+  Supplier,
+  SupplierStatusEnum,
 } from '../entities';
 
 interface ListQuery {
@@ -33,6 +35,8 @@ export class ProductItemService {
     private readonly deptRepo: Repository<ProductDepartment>,
     @InjectRepository(Org)
     private readonly orgRepo: Repository<Org>,
+    @InjectRepository(Supplier)
+    private readonly supplierRepo: Repository<Supplier>,
   ) { }
 
   /**
@@ -73,6 +77,8 @@ export class ProductItemService {
 
     const rows = await qb.getMany();
 
+    const supplierMap = await this.fetchSupplierNames(rows.map((r) => r.supplierMstId));
+
     return rows.map((pi) => ({
       itemID: pi.itemID,
       itemCode: pi.itemCode,
@@ -80,7 +86,7 @@ export class ProductItemService {
       itemSectionID: (pi.productDepartment as any)?.itemSectionId || '',
       itemSectionName: (pi.productDepartment as any)?.itemSectionName || '',
       supplierMstId: pi.supplierMstId,
-      supplierName: '', // Supplier master not implemented yet
+      supplierName: pi.supplierMstId ? supplierMap.get(pi.supplierMstId)?.supplierName || '' : '',
       cost: pi.cost,
       unitPrice: pi.unitPrice,
       taxationSection: pi.taxationSection,
@@ -108,6 +114,8 @@ export class ProductItemService {
       throw new NotFoundException('Product item not found');
     }
 
+    const supplierName = rec.supplierMstId ? await this.getSupplierName(rec.supplierMstId) : '';
+
     return {
       itemID: rec.itemID,
       itemCode: rec.itemCode,
@@ -115,6 +123,7 @@ export class ProductItemService {
       itemSectionID: (rec.productDepartment as any)?.itemSectionId || '',
       itemSectionName: (rec.productDepartment as any)?.itemSectionName || '',
       supplierMstId: rec.supplierMstId,
+      supplierName,
       cost: rec.cost,
       unitPrice: rec.unitPrice,
       taxationSection: rec.taxationSection,
@@ -144,6 +153,10 @@ export class ProductItemService {
     const supplierMstId = body.supplierMstId
       ? this.reqString(body.supplierMstId, 'supplierMstId')
       : null;
+
+    if (supplierMstId) {
+      await this.ensureActiveSupplier(supplierMstId);
+    }
 
     // unique itemCode check
     const dup = await this.repo.findOne({
@@ -262,9 +275,13 @@ export class ProductItemService {
     }
 
     if (body.supplierMstId !== undefined) {
-      rec.supplierMstId = body.supplierMstId
+      const newSupplierId = body.supplierMstId
         ? this.reqString(body.supplierMstId, 'supplierMstId')
         : null;
+      if (newSupplierId) {
+        await this.ensureActiveSupplier(newSupplierId);
+      }
+      rec.supplierMstId = newSupplierId;
     }
 
     if (body.itemSectionID !== undefined) {
@@ -321,6 +338,27 @@ export class ProductItemService {
     });
 
     return { deleted: ids.length };
+  }
+
+  private async fetchSupplierNames(ids: (string | null | undefined)[]) {
+    const uniqueIds = Array.from(new Set(ids.filter((v): v is string => !!v)));
+    if (uniqueIds.length === 0) return new Map<string, Supplier>();
+    const rows = await this.supplierRepo.find({ where: { id: In(uniqueIds) } });
+    const map = new Map<string, Supplier>();
+    rows.forEach((s) => map.set(s.id, s));
+    return map;
+  }
+
+  private async getSupplierName(id: string) {
+    const s = await this.supplierRepo.findOne({ where: { id } });
+    return s?.supplierName ?? '';
+  }
+
+  private async ensureActiveSupplier(id: string) {
+    const s = await this.supplierRepo.findOne({ where: { id } });
+    if (!s) throw new NotFoundException('Supplier not found');
+    if (s.status !== SupplierStatusEnum.ACTIVE) throw new BadRequestException('Supplier is inactive');
+    return s;
   }
 
   private async replaceOrgMappings(itemID: string, orgIDs: string[]) {
